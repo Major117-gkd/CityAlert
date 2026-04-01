@@ -1,0 +1,351 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'dashboard:dashboard_index' %}" class="btn btn-nav-back">
+    <i class="fas fa-home"></i> Accueil
+</a>
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .btn-nav-back {
+        background: rgba(255, 255, 255, 0.05); 
+        color: #fff; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        font-weight: 500;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .kpi-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        background: rgba(25, 33, 50, 0.6);
+    }
+    
+    .kpi-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+    }
+
+    .kpi-icon.total { 
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); 
+        box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4); 
+    }
+    .kpi-icon.efficiency { 
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%); 
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4); 
+    }
+    .kpi-icon.time { 
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); 
+        box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.4); 
+    }
+    
+    .kpi-title {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+    
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+
+    .chart-header {
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chart-title-icon-blue { color: var(--accent-blue); }
+    .chart-title-icon-orange { color: var(--accent-orange); }
+    .chart-title-icon-success { color: var(--success); }
+    .chart-title-icon-danger { color: var(--danger); }
+
+    .chart-container-large { height: 300px; width: 100%; }
+    .chart-container-medium { height: 250px; width: 100%; }
+    .chart-container-flex { display: flex; align-items: center; justify-content: center; }
+    
+    .charts-grid-half {
+        grid-template-columns: 1fr 1fr;
+    }
+</style>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon total">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <div>
+            <div class="kpi-title">Total Interventions</div>
+            <div class="kpi-value">{{ total_incidents|default:"0" }}</div>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-icon efficiency">
+            <i class="fas fa-check-double"></i>
+        </div>
+        <div>
+            <div class="kpi-title">Efficacité Résolution</div>
+            <div class="kpi-value">{{ repair_efficiency|default:"0" }}%</div>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-icon time">
+            <i class="fas fa-bolt"></i>
+        </div>
+        <div>
+            <div class="kpi-title">Temps de Rép. Moyen</div>
+            <div class="kpi-value">&lt; 15 min</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-grid">
+    <!-- Trend Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title"><i class="fas fa-chart-area chart-title-icon-blue"></i> Tendance des 7 derniers jours</h3>
+        </div>
+        <div class="chart-container-large">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Distribution Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title"><i class="fas fa-chart-pie chart-title-icon-orange"></i> Répartition par Catégorie</h3>
+        </div>
+        <div class="chart-container-large chart-container-flex">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="charts-grid charts-grid-half">
+    <!-- Status Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title"><i class="fas fa-tasks chart-title-icon-success"></i> État d'Avancement</h3>
+        </div>
+        <div class="chart-container-medium">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Severity Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title"><i class="fas fa-exclamation-triangle chart-title-icon-danger"></i> Niveaux de Sévérité</h3>
+        </div>
+        <div class="chart-container-medium">
+            <canvas id="severityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuration commune Chart.js adaptée au thème
+    const isLight = document.body.classList.contains('light-theme');
+    const chartTextColor = isLight ? '#64748B' : '#94A3B8';
+    const chartGridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+
+    Chart.defaults.color = chartTextColor;
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.defaults.scale.grid.color = chartGridColor;
+
+    // Parse data from Django variables
+    const rawCategoryData = JSON.parse('{{ category_data_json|escapejs }}' || '[]');
+    const rawTrendLabels = JSON.parse('{{ trend_labels_json|escapejs }}' || '[]');
+    const rawTrendData = JSON.parse('{{ trend_data_json|escapejs }}' || '[]');
+    const rawStatusData = JSON.parse('{{ status_data_json|escapejs }}' || '[]');
+    const rawSeverityData = JSON.parse('{{ severity_data_json|escapejs }}' || '[]');
+
+    // --- 1. Tendance (Area Chart) ---
+    const ctxTrend = document.getElementById('trendChart').getContext('2d');
+    
+    // Create gradient
+    let gradientArea = ctxTrend.createLinearGradient(0, 0, 0, 300);
+    gradientArea.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+    gradientArea.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: rawTrendLabels.length ? rawTrendLabels : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            datasets: [{
+                label: 'Nouvelles Alertes',
+                data: rawTrendData.length ? rawTrendData : [4, 6, 3, 5, 2, 7, 5],
+                borderColor: '#3B82F6',
+                backgroundColor: gradientArea,
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#3B82F6',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 10
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // --- 2. Répartition par Catégorie (Doughnut) ---
+    const ctxCat = document.getElementById('categoryChart').getContext('2d');
+    const catLabels = rawCategoryData.map(d => d.category);
+    const catDataList = rawCategoryData.map(d => d.count);
+    
+    new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+            labels: catLabels.length ? catLabels : ['Eau', 'Électricité', 'Route'],
+            datasets: [{
+                data: catDataList.length ? catDataList : [45, 25, 30],
+                backgroundColor: ['#3B82F6', '#F59E0B', '#EF4444', '#10B981', '#8B5CF6'],
+                borderWidth: 0,
+                hoverOffset: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, color: chartTextColor } }
+            }
+        }
+    });
+
+    // --- 3. État d'Avancement (Bar Horizontal) ---
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    const statusLabels = rawStatusData.map(d => d.status);
+    const statusCount = rawStatusData.map(d => d.count);
+
+    new Chart(ctxStatus, {
+        type: 'bar',
+        data: {
+            labels: statusLabels.length ? statusLabels : ['Nouveau', 'En cours', 'Résolu'],
+            datasets: [{
+                label: 'Dossiers',
+                data: statusCount.length ? statusCount : [5, 12, 45],
+                backgroundColor: ['#EF4444', '#F59E0B', '#10B981', '#64748B'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { grid: { display: false } } }
+        }
+    });
+
+    // --- 4. Niveaux de Sévérité (Bar Vertical) ---
+    const ctxSeverity = document.getElementById('severityChart').getContext('2d');
+    const sevLabels = rawSeverityData.map(d => d.severity);
+    const sevCount = rawSeverityData.map(d => d.count);
+
+    new Chart(ctxSeverity, {
+        type: 'bar',
+        data: {
+            labels: sevLabels.length ? sevLabels : ['Faible', 'Moyenne', 'Haute', 'Critique'],
+            datasets: [{
+                label: 'Alertes',
+                data: sevCount.length ? sevCount : [10, 20, 15, 5],
+                backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+        }
+    });
+</script>
+{% endblock %}

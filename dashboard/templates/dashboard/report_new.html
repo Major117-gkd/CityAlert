@@ -1,0 +1,1249 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block content %}
+<div class="report-universe">
+    <!-- Background Elements -->
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="report-ecosystem">
+        <!-- Left Panel - Instructions -->
+        <aside class="instruction-panel">
+            <div class="panel-header">
+                <div class="ai-badge">
+                    <i class="fas fa-brain"></i>
+                    <span>IA Active</span>
+                </div>
+                <h1>Signalement</h1>
+            </div>
+            
+            <div class="process-flow">
+                <div class="flow-step active" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <strong>Capture</strong>
+                        <span>Prendre une photo</span>
+                    </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step" id="step2">
+                <div class="flow-step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <strong>Analyse</strong>
+                        <span>IA traite l'image</span>
+                    </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <strong>Envoi</strong>
+                        <span>Validation automatique</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tips-section">
+                <h3><i class="fas fa-lightbulb"></i> Conseils</h3>
+                <ul>
+                    <li>Photo claire et bien éclairée</li>
+                    <li>Angle large pour plus de détails</li>
+                    <li>Pas de filtre ou de retouche</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Center - Main Form -->
+        <main class="capture-zone">
+            <div class="capture-container">
+                <div class="camera-frame">
+                    <div class="frame-decoration">
+                        <div class="corner corner-tl"></div>
+                        <div class="corner corner-tr"></div>
+                        <div class="corner corner-bl"></div>
+                        <div class="corner corner-br"></div>
+                    </div>
+                    
+                    <label class="capture-area" for="id_image">
+                        <div class="capture-placeholder">
+                            <i class="fas fa-camera camera-icon"></i>
+                            <div class="capture-text">
+                                <strong>Cliquez pour capturer</strong>
+                                <span>ou glissez-déposez une photo</span>
+                            </div>
+                        </div>
+                        <input type="file" name="image" accept="image/*" id="id_image" class="hidden-file-input" onchange="previewImage(this)" title="Saisir une image">
+                    </label>
+                        
+                        <img id="imagePreview" src="#" alt="Aperçu" class="preview-img-hidden">
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button type="button" class="action-btn gallery" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-images"></i>
+                        <span>Galerie</span>
+                    </button>
+                    <button type="button" class="action-btn camera" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-camera"></i>
+                        <span>Appareil</span>
+                    </button>
+                </div>
+            </div>
+
+            <form id="reportForm" enctype="multipart/form-data" method="post" action="{% url 'dashboard:report_incident' %}">
+                {% csrf_token %}
+                
+                <div class="smart-options">
+                    <div class="option-category">
+                        <label class="smart-label">Type de problème</label>
+                        <div class="smart-selector">
+                            <div class="selector-item selected" data-value="EAU">
+                                <div class="item-icon">💧</div>
+                                <span>Fuite d'eau</span>
+                            </div>
+                            <div class="selector-item" data-value="ACCIDENT">
+                                <div class="item-icon">🚗</div>
+                                <span>Accident</span>
+                            </div>
+                            <div class="selector-item" data-value="ELECTRICITE">
+                                <div class="item-icon">⚡</div>
+                                <span>Panne électrique</span>
+                            </div>
+                            <div class="selector-item" data-value="AUTRE">
+                                <div class="item-icon">⚠️</div>
+                                <span>Autre</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="category" id="categoryInput" value="EAU">
+                    </div>
+
+                    <div class="option-urgency">
+                        <label class="smart-label">Niveau d'urgence</label>
+                        <div class="urgency-slider">
+                            <div class="slider-track">
+                                <div class="slider-fill" id="urgencyFill"></div>
+                                <div class="slider-thumb" id="urgencyThumb">
+                                    <div class="thumb-icon">🔥</div>
+                                </div>
+                            </div>
+                            <div class="urgency-labels">
+                                <span class="label-low">Bas</span>
+                                <span class="label-medium">Moyen</span>
+                                <span class="label-high">Élevé</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="severity" id="severityInput" value="1">
+                    </div>
+                </div>
+
+                <div class="submit-zone">
+                    <button type="submit" id="submitBtn" class="quantum-btn">
+                        <div class="btn-content">
+                            <i class="fas fa-rocket"></i>
+                            <span>Lancer l'analyse IA</span>
+                        </div>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <!-- Right Panel - Stats -->
+        <aside class="stats-panel">
+            <div class="stat-header">
+                <h3><i class="fas fa-chart-line"></i> Activité</h3>
+            </div>
+            
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-number">247</div>
+                        <div class="stat-label">Signalements</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-number">12min</div>
+                        <div class="stat-label">Temps moyen</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">Précision IA</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="performance-chart">
+                <h4>Efficacité</h4>
+                <div class="chart-bars">
+                    <div class="bar-item">
+                        <div class="bar-label">Jour</div>
+                        <div class="bar-fill bar-fill-day"></div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">Nuit</div>
+                        <div class="bar-fill bar-fill-night"></div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">Week-end</div>
+                        <div class="bar-fill bar-fill-weekend"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- AI Analysis Overlay -->
+<div id="aiAnalysis" class="ai-overlay">
+    <div class="ai-quantum">
+        <div class="quantum-core">
+            <div class="core-rings">
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+            </div>
+            <div class="core-center">
+                <i class="fas fa-brain"></i>
+            </div>
+        </div>
+        
+        <div class="ai-status">
+            <h2 id="aiTitle">Analyse Quantique</h2>
+            <p id="aiMessage">Traitement neuronal en cours...</p>
+        </div>
+
+        <div class="quantum-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+
+        <div class="quantum-progress">
+            <div class="progress-track">
+                <div class="progress-quantum" id="aiProgress"></div>
+                <div class="progress-particles"></div>
+            </div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-quantum"></div>
+
+<style>
+/* Universe Background */
+.report-universe {
+    min-height: 100vh;
+    background: var(--primary-bg);
+    position: relative;
+    overflow: hidden;
+}
+
+.hidden-file-input { display: none; }
+.media-container { cursor: zoom-in; }
+
+.floating-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow-blue) 0%, transparent 65%);
+    animation: float 20s infinite ease-in-out;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 200px;
+    height: 200px;
+    top: 60%;
+    right: 10%;
+    background: radial-gradient(circle, var(--glow-pink) 0%, transparent 65%);
+    animation-delay: 5s;
+}
+
+.shape-3 {
+    width: 150px;
+    height: 150px;
+    bottom: 20%;
+    left: 15%;
+    animation-delay: 10s;
+}
+
+.shape-4 {
+    width: 100px;
+    height: 100px;
+    top: 30%;
+    right: 25%;
+    animation-delay: 15s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* Ecosystem Layout */
+.report-ecosystem {
+    display: grid;
+    grid-template-columns: 300px 1fr 280px;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.instruction-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2rem;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+    border-radius: 20px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.panel-header h1 {
+    color: var(--text-main);
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.process-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.05);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.flow-step.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--accent-orange);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.step-text strong {
+    color: var(--text-main);
+    display: block;
+    font-size: 0.95rem;
+}
+
+.step-text span {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.flow-connector {
+    width: 2px;
+    height: 20px;
+    background: var(--border-color);
+    margin-left: 15px;
+}
+
+.tips-section {
+    background: rgba(255, 107, 53, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.tips-section h3 {
+    color: var(--text-main);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.tips-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tips-section li {
+    color: var(--text-muted);
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.tips-section li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.capture-zone {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2rem;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+}
+
+.capture-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.camera-frame {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.frame-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-blue);
+    opacity: 0.5;
+}
+
+.corner-tl { top: 10px; left: 10px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+.corner-tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+.corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+.corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+
+.capture-area {
+    height: 300px;
+    border: 3px dashed var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(148, 163, 184, 0.05);
+}
+
+.capture-area:hover {
+    border-color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.capture-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.camera-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--accent-blue);
+    opacity: 0.6;
+}
+
+.capture-text strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.capture-text span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+#imagePreview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 9px;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.05);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.action-btn:hover {
+    background: rgba(148, 163, 184, 0.1);
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+}
+
+/* Smart Options */
+.smart-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.smart-label {
+    color: var(--text-main);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.smart-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.8rem;
+}
+
+.selector-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.selector-item:hover {
+    border-color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+}
+
+.selector-item.selected {
+    border-color: var(--accent-orange);
+    background: rgba(244, 63, 94, 0.1);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.1);
+}
+
+.item-icon {
+    font-size: 1.5rem;
+}
+
+.urgency-slider {
+    position: relative;
+}
+
+.slider-track {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    position: relative;
+    margin: 1rem 0;
+}
+
+.slider-fill {
+    height: 100%;
+    width: 33%;
+    background: linear-gradient(90deg, var(--success), var(--accent-yellow), var(--danger));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.slider-thumb {
+    position: absolute;
+    top: 50%;
+    left: 33%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: left 0.3s ease;
+}
+
+.thumb-icon {
+    font-size: 0.8rem;
+    color: white;
+}
+
+.urgency-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+.urgency-labels span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Submit Zone */
+.submit-zone {
+    margin-top: 2rem;
+}
+
+.quantum-btn {
+    width: 100%;
+    padding: 1.2rem;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent-orange), #d97706);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.quantum-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(244, 63, 94, 0.3);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Stats Panel */
+.stats-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.stat-header h3 {
+    color: var(--text-main);
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(148, 163, 184, 0.05);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-blue);
+    font-size: 1.2rem;
+}
+
+.stat-number {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.performance-chart h4 {
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.chart-bars {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: 100px;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.bar-item {
+    align-items: center;
+    flex: 1;
+}
+
+.bar-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.bar-fill {
+    width: 20px;
+    background: linear-gradient(to top, var(--primary-orange), #64c8ff);
+    border-radius: 10px 10px 0 0;
+    transition: height 0.5s ease;
+}
+
+/* Quantum AI Overlay */
+.ai-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
+}
+
+.ai-quantum {
+    background: radial-gradient(circle at center, rgba(10, 10, 30, 0.9), rgba(20, 20, 50, 0.8));
+    border: 2px solid rgba(100, 200, 255, 0.3);
+    border-radius: 30px;
+    padding: 3rem;
+    width: min(500px, 90vw);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 0 100px rgba(100, 200, 255, 0.3),
+        0 25px 50px rgba(0, 0, 0, 0.5),
+        inset 0 0 50px rgba(100, 200, 255, 0.1);
+}
+
+.quantum-core {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 2rem;
+    position: relative;
+}
+
+.core-rings {
+    position: absolute;
+    inset: 0;
+    animation: rotate-rings 4s linear infinite;
+}
+
+.ring {
+    position: absolute;
+    border: 2px solid rgba(100, 200, 255, 0.3);
+    border-radius: 50%;
+}
+
+.ring-1 {
+    inset: 0;
+}
+
+.ring-2 {
+    inset: 10px;
+    animation-delay: 1s;
+}
+
+.ring-3 {
+    inset: 20px;
+    animation-delay: 2s;
+}
+
+@keyframes rotate-rings {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.core-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #64c8ff, #2563eb);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    box-shadow: 0 0 30px rgba(100, 200, 255, 0.8);
+}
+
+.ai-status {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.ai-status h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #64c8ff, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ai-status p {
+    margin: 0.5rem 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+}
+
+.quantum-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #64c8ff;
+    border-radius: 50%;
+    animation: float-particle 3s infinite ease-in-out;
+}
+
+.particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { top: 60%; right: 15%; animation-delay: 1s; }
+.particle:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 2s; }
+.particle:nth-child(4) { top: 40%; right: 25%; animation-delay: 1.5s; }
+.particle:nth-child(5) { bottom: 50%; left: 60%; animation-delay: 2.5s; }
+
+@keyframes float-particle {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+    50% { transform: translateY(-20px) scale(1.5); opacity: 1; }
+}
+
+.quantum-progress {
+    margin: 2rem 0;
+    position: relative;
+    z-index: 2;
+}
+
+.progress-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-quantum {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #64c8ff);
+    border-radius: 4px;
+    width: 0;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+}
+
+.progress-particles {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(100, 200, 255, 0.5), transparent);
+    animation: progress-flow 2s infinite;
+}
+
+@keyframes progress-flow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #64c8ff;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+/* Toast */
+.toast-quantum {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 10010;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.4);
+    color: white;
+    font-weight: 600;
+    animation: toast-quantum 0.3s ease;
+}
+
+.toast.success { background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(34, 197, 94, 0.9)); }
+.toast.error { background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.9)); }
+
+.toast i { font-size: 1.2rem; }
+
+@keyframes toast-quantum {
+    0% { transform: translateX(20px) scale(0.9); opacity: 0; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .report-ecosystem {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .instruction-panel,
+    .stats-panel {
+        order: 2;
+    }
+    
+    .capture-zone {
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .report-universe {
+        padding: 1rem;
+    }
+    
+    .smart-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function previewImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('placeholderZone');
+        const captureArea = document.querySelector('.capture-area');
+
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+        captureArea.style.borderStyle = 'solid';
+        captureArea.style.borderColor = 'rgba(100, 200, 255, 0.6)';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Smart selector interactions
+document.addEventListener('DOMContentLoaded', function() {
+    const selectorItems = document.querySelectorAll('.selector-item');
+    selectorItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            const input = document.getElementById('categoryInput');
+            
+            selectorItems.forEach(i => i.classList.remove('selected'));
+            this.classList.add('selected');
+            input.value = value;
+        });
+    });
+
+    // Urgency slider
+    const sliderThumb = document.getElementById('urgencyThumb');
+    const sliderTrack = document.querySelector('.slider-track');
+    const severityInput = document.getElementById('severityInput');
+    
+    let isDragging = false;
+    
+    function updateUrgency(percentage) {
+        sliderThumb.style.left = percentage + '%';
+        document.querySelector('.slider-fill').style.width = percentage + '%';
+        
+        let value = '1';
+        if (percentage > 66) value = '3';
+        else if (percentage > 33) value = '2';
+        
+        severityInput.value = value;
+    }
+    
+    sliderThumb.addEventListener('mousedown', () => isDragging = true);
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const rect = sliderTrack.getBoundingClientRect();
+        const percentage = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        updateUrgency(percentage);
+    });
+    
+    document.addEventListener('mouseup', () => isDragging = false);
+    
+    // Touch support
+    sliderThumb.addEventListener('touchstart', () => isDragging = true);
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        const rect = sliderTrack.getBoundingClientRect();
+        const percentage = Math.max(0, Math.min(100, ((e.touches[0].clientX - rect.left) / rect.width) * 100));
+        updateUrgency(percentage);
+    });
+    document.addEventListener('touchend', () => isDragging = false);
+});
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px) scale(0.9)';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+function startProgress() {
+    const fill = document.getElementById('aiProgress');
+    const progressText = document.getElementById('progressText');
+    if (!fill || !progressText) return null;
+
+    let progress = 8;
+    fill.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+
+    // Activer les étapes progressivement
+    const steps = ['step1', 'step2', 'step3'];
+    const stepDelays = [0, 1000, 2000];
+
+    steps.forEach((stepId, index) => {
+        setTimeout(() => {
+            if (index > 0) {
+                document.getElementById(steps[index - 1]).classList.remove('active');
+            }
+            document.getElementById(stepId).classList.add('active');
+        }, stepDelays[index]);
+    });
+
+    const interval = setInterval(() => {
+        progress = Math.min(progress + Math.random() * 8, 84);
+        fill.style.width = `${progress}%`;
+        progressText.textContent = `${Math.floor(progress)}%`;
+    }, 400);
+
+    return interval;
+}
+
+function completeProgress() {
+    const fill = document.getElementById('aiProgress');
+    if (!fill) return;
+    fill.style.width = '100%';
+}
+
+function runAnalysis(form) {
+    const submitBtn = document.getElementById('submitBtn');
+    const aiOverlay = document.getElementById('aiAnalysis');
+    const aiTitle = document.getElementById('aiTitle');
+    const aiMessage = document.getElementById('aiMessage');
+
+    aiTitle.textContent = 'Analyse Quantique en cours...';
+    aiMessage.textContent = 'Traitement neuronal de l\'image...';
+    
+    aiOverlay.style.display = 'flex';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="btn-content"><i class="fas fa-atom"></i><span>Analyse en cours...</span></div>';
+    }
+
+    const progressInterval = startProgress();
+
+    const formData = new FormData(form);
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (progressInterval) clearInterval(progressInterval);
+        completeProgress();
+
+        if (data.status === 'success' || data.success) {
+            aiTitle.textContent = 'Signalement validé !';
+            aiMessage.textContent = 'L\'IA a confirmé l\'incident et l\'équipe est notifiée.';
+            showToast('Signalement envoyé avec succès.', 'success');
+
+            setTimeout(() => {
+                aiOverlay.style.display = 'none';
+                window.location.href = '{% url "dashboard:dashboard_index" %}';
+            }, 2000);
+        } else {
+            aiTitle.textContent = 'Analyse incomplète';
+            aiMessage.textContent = data.message || data.error || 'L\'IA n\'a pas pu valider la photo.';
+            showToast(data.message || data.error || 'Erreur lors de l\'analyse.', 'error');
+
+            setTimeout(() => {
+                aiOverlay.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<div class="btn-content"><i class="fas fa-rocket"></i><span>Lancer l\'analyse IA</span></div>';
+                }
+            }, 2000);
+        }
+    })
+    .catch(() => {
+        if (progressInterval) clearInterval(progressInterval);
+        completeProgress();
+
+        aiTitle.textContent = 'Erreur quantique';
+        aiMessage.textContent = 'Impossible de se connecter au réseau neuronal...';
+        showToast('Erreur de connexion. Veuillez réessayer.', 'error');
+
+        setTimeout(() => {
+            aiOverlay.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<div class="btn-content"><i class="fas fa-rocket"></i><span>Lancer l\'analyse IA</span></div>';
+            }
+        }, 2000);
+    });
+}
+
+const reportForm = document.getElementById('reportForm');
+if (reportForm) {
+    reportForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        runAnalysis(this);
+    });
+}
+</script>
+{% endblock %}

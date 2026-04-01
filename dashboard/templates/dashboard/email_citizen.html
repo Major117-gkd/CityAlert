@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .header {
+            background: #0f172a;
+            padding: 30px;
+            text-align: center;
+            color: #ff6b35;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+        }
+        .incident-id {
+            background: #f1f5f9;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h2 style="margin:0;">CityAlert</h2>
+        </div>
+        <div class="content">
+            <h3>Merci pour votre signalement !</h3>
+            <p>Bonjour {{ incident.user_name }},</p>
+            <p>Nous vous confirmons la bonne réception de votre signalement <span class="incident-id">#{{ incident.id }}</span> concernant un incident de type <strong>{{ incident.get_category_display }}</strong>.</p>
+            <p><strong>Lieu :</strong> {{ incident.address }}</p>
+            <p>Votre contribution est précieuse pour maintenir la sécurité et l'efficacité de nos services urbains. Nos équipes ont été alertées et interviendront dans les plus brefs délais.</p>
+            <p>Vous recevrez une notification dès que la situation sera résolue.</p>
+            <p>— L'équipe CityAlert</p>
+        </div>
+        <div class="footer">
+            CityAlert - Ensemble pour une ville plus sûre.
+        </div>
+    </div>
+</body>
+</html>

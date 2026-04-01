@@ -1,0 +1,432 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block header_title %}City Command Center <i class="fas fa-satellite-dish header-icon-main"></i>{% endblock %}
+{% block header_subtitle %}Supervision Urbaine Multiservices Propulsée par Intelligence Artificielle{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .metric-card { 
+        padding: 1.25rem; 
+        display: flex; 
+        align-items: center; 
+        gap: 1rem; 
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        background: var(--card-bg);
+    }
+    
+    .metric-card:hover.total { border-color: rgba(255,255,255,0.4); box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
+    .metric-card:hover.water { border-color: var(--accent-blue); box-shadow: 0 10px 30px rgba(0, 240, 255, 0.2); }
+    .metric-card:hover.accident { border-color: var(--accent-red); box-shadow: 0 10px 30px rgba(255, 0, 85, 0.2); }
+    .metric-card:hover.electric { border-color: var(--accent-yellow); box-shadow: 0 10px 30px rgba(255, 184, 0, 0.2); }
+    
+    .metric-icon-box { 
+        width: 45px; height: 45px; border-radius: 12px; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 1.25rem; 
+        transition: 0.4s;
+    }
+    
+    .total .metric-icon-box { background: rgba(148, 163, 184, 0.1); color: var(--text-main); }
+    .water .metric-icon-box { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); }
+    .accident .metric-icon-box { background: rgba(255, 0, 85, 0.1); color: var(--accent-red); }
+    .electric .metric-icon-box { background: rgba(255, 184, 0, 0.1); color: var(--accent-yellow); }
+
+    .metric-value { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; line-height: 1.2; }
+    .metric-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .dashboard-grid { display: grid; grid-template-columns: 2.5fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .map-container { padding: 1rem; border-radius: 12px; }
+    #map { height: 420px; width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* New Animated Data Rows for Incidents */
+    .report-card { 
+        background: var(--card-bg); 
+        border-radius: 8px; 
+        padding: 0.85rem; 
+        margin-bottom: 0.6rem; 
+        display: flex; 
+        align-items: center;
+        gap: 1rem; 
+        transition: 0.2s; 
+        border-left: 3px solid transparent;
+    }
+    .report-card:hover { 
+        background: rgba(255,255,255,0.06); 
+        border-left-color: var(--accent-blue);
+    }
+
+    .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-eau { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); border: 1px solid rgba(0,240,255,0.2); }
+    .badge-accident { background: rgba(255, 0, 85, 0.1); color: var(--accent-red); border: 1px solid rgba(255,0,85,0.2); }
+    .badge-electricite { background: rgba(255, 184, 0, 0.1); color: var(--accent-yellow); border: 1px solid rgba(255,184,0,0.2); }
+    .badge-telegram { background: rgba(0, 230, 118, 0.1); color: var(--success); border: 1px solid rgba(0,230,118,0.2); }
+
+    .map-container { position: relative; }
+    
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: var(--card-bg);
+        -webkit-backdrop-filter: var(--glass-blur);
+        backdrop-filter: var(--glass-blur);
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        color: #f8fafc;
+        font-weight: 600;
+    }
+    
+    .legend-item .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        box-shadow: 0 0 6px currentColor;
+    }
+
+    .metric-card.telegram {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+        border-color: rgba(76, 175, 80, 0.3);
+    }
+    
+    .metric-card.telegram .metric-icon-box {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+    }
+
+    .header-icon-main { color: var(--accent-blue); animation: pulseNeon 2s infinite alternate; font-size: 1.2rem; margin-left: 10px; }
+    .section-header-icon { color: var(--accent-orange); margin-right: 8px; }
+    .map-title { font-size: 1rem; margin-bottom: 1rem; }
+    .legend-dot-red { background: #ef4444; }
+    .legend-dot-orange { background: #f59e0b; }
+    .legend-dot-green { background: #10b981; }
+    
+    .report-card-icon { font-size: 1.1rem; width: 30px; text-align: center; }
+    .report-card-info { flex: 1; }
+    .report-card-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .reporter-name { font-weight: 600; font-size: 0.85rem; color: #fff; }
+    .report-address { font-size: 0.75rem; color: var(--text-muted); }
+    .btn-notify-email { background: transparent; border: none; color: var(--accent-orange); cursor: pointer; padding: 2px 5px; }
+    .flex-1 { flex: 1; }
+    .metric-content { width: 100%; display: flex; flex-direction: column; }
+    
+    /* Grille des Graphiques en bas - Version Compacte */
+    .visuals-grid { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 1.25rem; 
+        margin-top: 1.5rem;
+    }
+    
+    .chart-box { 
+        padding: 1.25rem; 
+        height: 240px; 
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+    }
+
+    .recent-list { padding: 1rem; overflow-y: auto; max-height: 480px; }
+    .section-title { font-size: 0.9rem; margin-bottom: 1rem; color: var(--accent-blue); }
+    .report-card-footer { display: flex; justify-content: space-between; align-items: center; }
+
+    @media (max-width: 1200px) {
+        .visuals-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .map-container { height: 400px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="metrics-grid">
+    <div class="glass-card metric-card total">
+        <div class="metric-icon-box"><i class="fas fa-layer-group"></i></div>
+        <div class="metric-content">
+            <div class="metric-value">{{ metrics.total }}</div>
+            <div class="metric-label">Alertes Totales</div>
+        </div>
+    </div>
+    <div class="glass-card metric-card water">
+        <div class="metric-icon-box"><i class="fas fa-droplet"></i></div>
+        <div class="metric-content">
+            <div class="metric-value">{{ metrics.water }}</div>
+            <div class="metric-label">Réseau d'Eau</div>
+        </div>
+    </div>
+    <div class="glass-card metric-card accident">
+        <div class="metric-icon-box"><i class="fas fa-car-burst"></i></div>
+        <div class="metric-content">
+            <div class="metric-value">{{ metrics.accidents }}</div>
+            <div class="metric-label">Incid. Route</div>
+        </div>
+    </div>
+    <div class="glass-card metric-card electric">
+        <div class="metric-icon-box"><i class="fas fa-bolt"></i></div>
+        <div class="metric-content">
+            <div class="metric-value">{{ metrics.electric }}</div>
+            <div class="metric-label">Pannes Élec.</div>
+        </div>
+    </div>
+    <div class="glass-card metric-card telegram">
+        <div class="metric-icon-box"><i class="fas fa-robot"></i></div>
+        <div class="metric-content">
+            <div class="metric-value">{{ metrics.telegram }}</div>
+            <div class="metric-label">Bot Telegram</div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="glass-card map-container">
+        <h3 class="map-title"><i class="fas fa-map-location-dot section-header-icon"></i> Situation de la Ville</h3>
+        <div id="map"></div>
+        <div class="map-legend">
+            <div class="legend-item"><span class="dot legend-dot-red"></span> Signalé</div>
+            <div class="legend-item"><span class="dot legend-dot-orange"></span> En cours</div>
+            <div class="legend-item"><span class="dot legend-dot-green"></span> Résolu / Clos</div>
+        </div>
+    </div>
+    
+    <div class="glass-card recent-list">
+        <h3 class="section-title">Dernières Alertes</h3>
+        {% for incident in incidents %}
+        <div class="report-card incident-card" data-lat="{{ incident.latitude }}" data-lon="{{ incident.longitude }}">
+            <i class="fas {% if incident.category == 'Eau' %}fa-droplet color-eau{% elif incident.category == 'Accident' %}fa-car-burst color-accident{% elif incident.category == 'Electricite' %}fa-bolt color-electricite{% else %}fa-exclamation-triangle{% endif %} report-card-icon"></i>
+            <div class="report-card-info">
+                <div class="report-card-header">
+                    <span class="reporter-name">{{ incident.user_name }}</span>
+                    <span class="badge badge-{{ incident.category|lower }}">{{ incident.category }}</span>
+                </div>
+                <div class="report-card-footer">
+                    <p class="report-address">{{ incident.address|truncatechars:20 }}</p>
+                    <button type="button" class="btn-notify-email" data-id="{{ incident.id }}" title="Notifier">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-notify-email');
+        if (btn) {
+            const id = btn.dataset.id;
+            sendEmail(id, btn);
+        }
+    });
+
+    async function sendEmail(id, btn) {
+        const icon = btn.querySelector('i');
+        
+        btn.style.opacity = '0.5';
+        btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin';
+
+        try {
+            const response = await fetch(`/notify-email/${id}/`, {
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                icon.className = 'fas fa-check text-success';
+                showNotification('Email Envoyé', 'Le mail de notification a été généré avec succès (voir terminal).', 'success');
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (e) {
+            icon.className = 'fas fa-exclamation-triangle text-danger';
+            showNotification('Erreur d\'Envoi', e.message, 'error');
+        } finally {
+            setTimeout(() => {
+                btn.style.opacity = '1';
+                btn.disabled = false;
+                icon.className = 'fas fa-envelope';
+            }, 2000);
+        }
+    }
+</script>
+
+<div class="visuals-grid">
+    <div class="chart-box"><canvas id="statusChart"></canvas></div>
+    <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+    <div class="chart-box"><canvas id="trendChart"></canvas></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var isLightMode = document.body.classList.contains('light-theme');
+    var mapStyle = isLightMode ? 'light_all' : 'dark_all';
+    
+    var map = L.map('map', { zoomControl: false }).setView([46.2276, 2.2137], 6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/' + mapStyle + '/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CartoDB'
+    }).addTo(map);
+
+    // Initialisation des couches modernes
+    var markers = L.markerClusterGroup({
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true
+    });
+    var heatPoints = [];
+    var heatLayer = L.heatLayer([], { radius: 25, blur: 15, maxZoom: 17 }).addTo(map);
+
+    function getStatusColor(status) {
+        if (!status) return "#3b82f6";
+        const s = status.toLowerCase();
+        if (s.includes('signal') || s.includes('rapport')) return "#ef4444"; // Rouge pour nouveau
+        if (s.includes('cours') || s.includes('traitement')) return "#f59e0b"; // Orange pour en cours
+        if (s.includes('répar') || s.includes('résolu') || s.includes('clos')) return "#10b981"; // Vert pour fini
+        return "#3b82f6"; // Bleu par défaut
+    }
+
+    function updateMap(incidents) {
+        markers.clearLayers();
+        heatPoints = [];
+        const bounds = [];
+        
+        incidents.forEach(incident => {
+            if (incident.latitude && incident.longitude) {
+                const lat = parseFloat(incident.latitude);
+                const lon = parseFloat(incident.longitude);
+                const color = getStatusColor(incident.status);
+                
+                const marker = L.circleMarker([lat, lon], {
+                    radius: 8, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9
+                }).bindPopup(`
+                    <div style="font-family: inherit; color: #1e293b;">
+                        <b style="color: ${color}; text-transform: uppercase; font-size: 0.7rem;">${incident.category}</b><br>
+                        <strong style="font-size: 0.9rem;">${incident.status}</strong><br>
+                        <small style="color: #64748b;">${incident.address}</small>
+                    </div>
+                `);
+                
+                markers.addLayer(marker);
+                heatPoints.push([lat, lon, 0.5]);
+                bounds.push([lat, lon]);
+            }
+        });
+        
+        map.addLayer(markers);
+        heatLayer.setLatLngs(heatPoints);
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+    }
+</script>
+
+<!-- JSON Data Hooks -->
+{{ all_incidents_json|json_script:"all-incidents-data" }}
+{{ metrics|json_script:"metrics-data" }}
+{{ status_data|json_script:"status-data" }}
+{{ trend_data|json_script:"trend-data" }}
+{{ last_incident_id|json_script:"last-incident-id" }}
+
+<script>
+    const initialIncidents = JSON.parse(document.getElementById('all-incidents-data').textContent);
+    const metricsData = JSON.parse(document.getElementById('metrics-data').textContent);
+    const statusData = JSON.parse(document.getElementById('status-data').textContent);
+    const trendData = JSON.parse(document.getElementById('trend-data').textContent);
+    
+    updateMap(initialIncidents);
+
+    // Event Delegation for incident cards
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.incident-card');
+        if (card) {
+            const lat = parseFloat(card.dataset.lat);
+            const lon = parseFloat(card.dataset.lon);
+            if (!isNaN(lat) && !isNaN(lon)) {
+                map.flyTo([lat, lon], 14);
+            }
+        }
+    });
+
+    // --- REAL-TIME POLLING ---
+    let lastIncidentId = JSON.parse(document.getElementById('last-incident-id').textContent);
+
+    async function pollLatestIncidents() {
+        try {
+            const response = await fetch('{% url "dashboard:latest_incidents_api" %}');
+            const data = await response.json();
+            
+            // Mise à jour des compteurs
+            document.querySelector('.total .metric-value').innerText = data.metrics.total;
+            document.querySelector('.water .metric-value').innerText = data.metrics.water;
+            document.querySelector('.accident .metric-value').innerText = data.metrics.accidents;
+            document.querySelector('.electric .metric-value').innerText = data.metrics.electric;
+            
+            // Notification si nouveau
+            if (data.incidents.length > 0 && data.incidents[0].id > lastIncidentId) {
+                const newInc = data.incidents[0];
+                showNotification(`Nouveau Signalement : ${newInc.category}`, newInc.address, 'success');
+                lastIncidentId = newInc.id;
+                
+                // Rafraîchir la liste latérale (optionnel ou complet)
+                location.reload(); // Pour simplifier le rafraîchissement complet du DOM pour le moment
+            }
+            
+            updateMap(data.incidents);
+        } catch (e) {
+            console.error("Polling error:", e);
+        }
+    }
+
+    // Lancer le polling toutes les 60 secondes pour économiser des ressources, mais "temps réel"
+    setInterval(pollLatestIncidents, 60000);
+
+    const isLight = document.body.classList.contains('light-theme');
+    const chartTextColor = isLight ? '#64748B' : '#94a3b8';
+    Chart.defaults.color = chartTextColor;
+    const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(d => d.status),
+            datasets: [{ data: statusData.map(d => d.count), backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0 }]
+        },
+        options: { ...commonOpts, cutout: '70%', plugins: { title: { display: true, text: 'État des Traitements' } } }
+    });
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Eau', 'Accidents', 'Électricité'],
+            datasets: [{ data: [metricsData.water, metricsData.accidents, metricsData.electric], backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b'], borderWidth: 0 }]
+        },
+        options: { ...commonOpts, plugins: { title: { display: true, text: 'Répartition par Type' } } }
+    });
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendData.map(d => d.day),
+            datasets: [{ label: 'Signalisations', data: trendData.map(d => d.count), borderColor: '#ff6b35', tension: 0.4, fill: true, backgroundColor: 'rgba(255, 107, 53, 0.1)' }]
+        },
+        options: { ...commonOpts, plugins: { title: { display: true, text: 'Tendance 7 Jours' } } }
+    });
+</script>
+{% endblock %}

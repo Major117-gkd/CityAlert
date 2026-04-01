@@ -1,0 +1,199 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Erreur de Liaison - CityAlert{% endblock %}
+
+{% block content %}
+<div class="user-dashboard">
+    <div class="welcome-card">
+        <div class="welcome-content">
+            <h1><i class="fas fa-exclamation-triangle"></i> Erreur de Liaison</h1>
+            <p>Une erreur s'est produite lors de la liaison de votre compte Telegram.</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="content-card">
+            <div class="card-header">
+                <h3><i class="fas fa-times-circle"></i> Problème Rencontré</h3>
+            </div>
+            <div class="content-body">
+                <div class="error-message">
+                    <div class="error-icon">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <h4>{{ error|default:"Erreur inconnue" }}</h4>
+                    <p>Le lien que vous avez utilisé n'est plus valide ou a expiré.</p>
+                    
+                    <div class="troubleshooting">
+                        <h5>Résolutions possibles :</h5>
+                        <ul>
+                            <li>Le lien expire après 5 minutes pour des raisons de sécurité</li>
+                            <li>Assurez-vous d'avoir cliqué sur le bon lien depuis Telegram</li>
+                            <li>Vérifiez que vous êtes connecté au bon compte utilisateur</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3><i class="fas fa-redo"></i> Réessayer</h3>
+            </div>
+            <div class="content-body">
+                <div class="retry-section">
+                    <p>Pour lier à nouveau votre compte Telegram :</p>
+                    
+                    <div class="steps">
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <span>Retournez dans Telegram</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <span>Envoyez <code>/start</code> au bot</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span>Cliquez sur le nouveau lien généré</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions-section">
+        <a href="{% url 'dashboard:link_telegram' %}" class="btn-primary">
+            <i class="fas fa-link"></i>
+            <span>Page de Liaison</span>
+        </a>
+        <a href="{% url 'dashboard:dashboard_index' %}" class="btn-secondary">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </div>
+</div>
+
+<style>
+.error-message {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.error-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.error-message h4 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.troubleshooting {
+    margin-top: 2rem;
+    text-align: left;
+    padding: 1.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.troubleshooting h5 {
+    color: var(--accent-red);
+    margin-bottom: 1rem;
+}
+
+.troubleshooting ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.troubleshooting li {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.retry-section {
+    padding: 1rem;
+}
+
+.retry-section p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    background: var(--primary-orange);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.step code {
+    background: rgba(0,0,0,0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.actions-section {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

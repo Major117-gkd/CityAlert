@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion | CityAlert</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --accent-orange: #ff6b35;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            z-index: 2;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 3rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--accent-orange);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: #fff;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--accent-orange);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-orange);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .image-side {
+            flex: 1.2;
+            background: url('/static/dashboard/images/city_monitoring_bg.png') center/cover no-repeat;
+            position: relative;
+        }
+
+        .image-side::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, var(--primary-bg), transparent);
+        }
+
+        .welcome-text {
+            position: absolute;
+            bottom: 5rem;
+            left: 5rem;
+            z-index: 3;
+            max-width: 500px;
+        }
+
+        .welcome-text h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-text p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 900px) {
+            .image-side {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <h1>CityAlert</h1>
+            </div>
+
+            <h2 style="margin-bottom: 0.5rem;">Bienvenue</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Connectez-vous pour accéder au panel
+                d'administration.</p>
+
+            {% if form.errors %}
+            <div
+                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.8rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+                Identifiants incorrects. Veuillez réessayer.
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Nom d'utilisateur</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="username" placeholder="admin" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">S'authentifier</button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem;">
+                <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Pas encore de compte ? <a
+                        href="{% url 'dashboard:register' %}"
+                        style="color: var(--accent-orange); text-decoration: none; font-weight: 600;">S'inscrire</a></p>
+                <a href="{% url 'dashboard:password_reset_request' %}"
+                    style="color: var(--text-muted); text-decoration: none;">Mot de passe oublié ?</a>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <a href="/" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;"><i
+                        class="fas fa-arrow-left" style="margin-right: 5px;"></i> Retour à l'accueil</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-side">
+        <div class="welcome-text">
+            <h2>Sécurisez votre ville.</h2>
+            <p>Le système CityAlert centralise la gestion des incidents pour une ville plus sûre et plus réactive.</p>
+        </div>
+    </div>
+</body>
+
+</html>

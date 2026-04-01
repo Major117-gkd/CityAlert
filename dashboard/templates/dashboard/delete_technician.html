@@ -1,0 +1,26 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 500px; margin: 0 auto; padding: 2.5rem; border-radius: 20px; text-align: center;">
+    
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 2.5rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #fff;">Êtes-vous sûr ?</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Voulez-vous vraiment supprimer le technicien <strong>{{ technician.name }}</strong> ? Cette action est irréversible et retirera ce membre de l'équipe <strong>{{ technician.get_category_display }}</strong>.</p>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'dashboard:technician_list' %}" style="padding: 1rem 2rem; background: rgba(255,255,255,0.1); color: white; border-radius: 12px; text-decoration: none; font-weight: 600;">Annuler</a>
+            <button type="submit" style="padding: 1rem 2rem; background: var(--danger); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                Oui, Supprimer
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

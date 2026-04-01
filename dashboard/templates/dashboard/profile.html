@@ -1,0 +1,209 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-grid">
+        <!-- Profile Preview Card -->
+        <div class="profile-card glass-card">
+            <div class="profile-cover"></div>
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar-preview">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="Avatar" id="avatarPreview">
+                    {% else %}
+                        <div class="avatar-placeholder" id="placeholderIcon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <img src="" alt="Avatar" id="avatarPreview" style="display: none;">
+                    {% endif %}
+                    <label for="id_avatar" class="avatar-edit-btn">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                </div>
+            </div>
+            <div class="profile-info-basic">
+                <h2>{{ user.username|capfirst }}</h2>
+                <p class="user-email">{{ user.email }}</p>
+                <div class="user-badges">
+                    <span class="badge {% if user.is_staff %}admin{% else %}citizen{% endif %}">
+                        <i class="fas {% if user.is_staff %}fa-shield-check{% else %}fa-user-check{% endif %}"></i>
+                        {% if user.is_staff %}Administrateur{% else %}Citoyen Actif{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="profile-stats-mini">
+                <div class="stat-item">
+                    <span class="stat-value">{{ user_stats.total|default:"0" }}</span>
+                    <span class="stat-label">Signalements</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ user_stats.resolved|default:"0" }}</span>
+                    <span class="stat-label">Résolus</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="profile-form-card glass-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user-edit"></i> Modifier mes informations</h3>
+            </div>
+            <form id="profileForm" method="post" enctype="multipart/form-data" class="custom-form">
+                {% csrf_token %}
+                <input type="file" name="avatar" id="id_avatar" style="display: none;" onchange="previewAvatar(this)">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom d'utilisateur</label>
+                        <input type="text" value="{{ user.username }}" disabled class="disabled-input">
+                        <small>Le nom d'utilisateur ne peut pas être modifié.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Adresse Email</label>
+                        <input type="text" value="{{ user.email }}" disabled class="disabled-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.bio.id_for_label }}">Biographie</label>
+                    {{ form.bio }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.phone.id_for_label }}">Téléphone</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.address.id_for_label }}">Adresse</label>
+                        {{ form.address }}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save" id="saveBtn">
+                        <i class="fas fa-save"></i> Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container { padding: 1rem; }
+.profile-grid { display: grid; grid-template-columns: 350px 1fr; gap: 2rem; }
+
+.profile-card { text-align: center; overflow: hidden; padding-bottom: 2rem; }
+.profile-cover { height: 100px; background: linear-gradient(135deg, var(--accent-orange), #ff8c42); }
+.profile-avatar-wrapper { margin-top: -50px; position: relative; display: inline-block; }
+.profile-avatar-preview { width: 120px; height: 120px; border-radius: 50%; border: 5px solid var(--sidebar-bg); background: var(--sidebar-bg); overflow: hidden; position: relative; }
+.profile-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted); }
+.avatar-edit-btn { position: absolute; bottom: 5px; right: 5px; width: 35px; height: 35px; border-radius: 50%; background: var(--accent-orange); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid var(--sidebar-bg); transition: 0.3s; }
+.avatar-edit-btn:hover { transform: scale(1.1); background: #ff8c42; }
+
+.profile-info-basic { padding: 1.5rem; }
+.profile-info-basic h2 { margin-bottom: 0.5rem; color: #fff; }
+.user-email { color: var(--text-muted); margin-bottom: 1rem; }
+.user-badges { display: flex; justify-content: center; gap: 10px; }
+.badge { padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.badge.citizen { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.badge.admin { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+.profile-stats-mini { display: flex; border-top: 1px solid var(--border-color); margin-top: 1rem; }
+.stat-item { flex: 1; padding: 1.5rem 0; display: flex; flex-direction: column; gap: 5px; }
+.stat-item:first-child { border-right: 1px solid var(--border-color); }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+.profile-form-card { padding: 2rem; }
+.card-header { margin-bottom: 2rem; }
+.card-header h3 { font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+
+.custom-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+.form-group input, .form-group textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.8rem 1rem; color: #fff; font-family: inherit; transition: 0.3s; }
+.form-group input:focus, .form-group textarea:focus { border-color: var(--accent-orange); outline: none; background: rgba(255, 255, 255, 0.08); }
+.disabled-input { opacity: 0.6; cursor: not-allowed; }
+.form-group small { font-size: 0.75rem; color: var(--text-muted); }
+
+.form-actions { margin-top: 1rem; }
+.btn-save { width: 100%; padding: 1rem; border-radius: 12px; border: none; background: var(--accent-orange); color: white; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; box-shadow: 0 10px 20px rgba(255, 107, 53, 0.2); }
+.btn-save:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+@media (max-width: 900px) {
+    .profile-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('placeholderIcon');
+
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+
+            // Update sidebar avatar if present
+            const sidebarImg = document.getElementById('sidebarAvatarImg');
+            const sidebarLetter = document.getElementById('sidebarAvatarLetter');
+            if (sidebarImg) {
+                sidebarImg.src = e.target.result;
+                sidebarImg.style.display = 'block';
+            }
+            if (sidebarLetter) {
+                sidebarLetter.style.display = 'none';
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+document.getElementById('profileForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    const originalContent = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    
+    const formData = new FormData(this);
+    try {
+        const response = await fetch('{% url "dashboard:profile_view" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            showNotification('Succès', data.message, 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showNotification('Erreur', data.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
+    } catch (error) {
+        showNotification('Erreur', 'Une erreur de connexion est survenue', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+};
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-container { padding: 1.5rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; color: var(--text-main); }
+    th { text-align: left; padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
+    td { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; transition: 0.3s; }
+    tr { transition: 0.3s; position: relative; }
+    tr:hover { background: rgba(0, 240, 255, 0.03); box-shadow: inset 4px 0 0 0 var(--accent-blue); }
+    
+    .badge-cat { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px; }
+    .cat-eau { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .cat-accident { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .cat-electricite { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    /* Fallback and case-insensitive/accent-insensitive selectors */
+    [class*="cat-Eau"], [class*="cat-eau"] { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    [class*="cat-Accident"], [class*="cat-accident"] { background: rgba(239,68,68,0.1); color: #ef4444; }
+    [class*="cat-Electricit"], [class*="cat-electricit"] { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    
+    .sev-high { color: #ef4444; }
+    .sev-medium { color: #f59e0b; }
+    .sev-low { color: #3b82f6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 2rem; padding: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; flex: 1;">
+        <div class="glass-card" style="padding: 0.5rem 1rem; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 250px;">
+            <i class="fas fa-search" style="color: var(--text-muted);"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher une adresse, un auteur ou un ID..." 
+                   style="background: none; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem;">
+        </div>
+        
+        <select id="severityFilter" class="glass-card" style="padding: 0.5rem 1rem; border: none; color: white; outline: none; cursor: pointer;" title="Filtrer par sévérité" aria-label="Filtrer par sévérité">
+            <option value="">Toutes les Sévérités</option>
+            <option value="Basée">Basse</option>
+            <option value="Moyenne">Moyenne</option>
+            <option value="Élevée">Élevée</option>
+        </select>
+
+        <select id="statusFilter" class="glass-card" style="padding: 0.5rem 1rem; border: none; color: white; outline: none; cursor: pointer;" title="Filtrer par statut" aria-label="Filtrer par statut">
+            <option value="">Tous les Statuts</option>
+            <option value="Signalé">Signalé</option>
+            <option value="En cours">En cours</option>
+            <option value="Résolu">Résolu</option>
+        </select>
+    </div>
+    
+    <div style="font-size: 0.8rem; color: var(--text-muted);">
+        <span id="matchCount">{{ incidents|length }}</span> incidents affichés
+    </div>
+</div>
+
+<div class="glass-card table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Auteur</th>
+                <th>Localisation</th>
+                <th>Sévérité</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="incidentTableBody">
+            {% for incident in incidents %}
+            <tr class="incident-row" data-id="{{ incident.id }}" data-severity="{{ incident.severity }}" data-status="{{ incident.status }}" data-category="{{ incident.category }}">
+                <td>#{{ incident.id }}</td>
+                <td><div class="badge-cat cat-{{ incident.category }}">{{ incident.category }}</div></td>
+                <td><div style="font-weight: 600;">{{ incident.user_name }}</div></td>
+                <td class="address-cell">{{ incident.address|truncatechars:40 }}</td>
+                <td class="severity-cell {% if incident.severity == 'Élevée' %}sev-high{% elif incident.severity == 'Moyenne' %}sev-medium{% else %}sev-low{% endif %}" style="font-weight: 600;">
+                    {{ incident.severity }}
+                </td>
+                <td>{{ incident.timestamp|date:"d/m/Y H:i" }}</td>
+                <td class="status-cell">
+                    <span class="glass-card" style="padding: 4px 10px; font-size: 0.8rem; display: inline-block;">
+                        {{ incident.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'dashboard:incident_detail' incident.id %}" class="glass-card" style="padding: 5px 10px; text-decoration: none; color: var(--accent-orange); font-size: 0.8rem;" title="Voir les détails" aria-label="Voir les détails">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const severityFilter = document.getElementById('severityFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const rows = document.querySelectorAll('.incident-row');
+    const matchCount = document.getElementById('matchCount');
+
+    function filterTable() {
+        const query = searchInput.value.toLowerCase();
+        const severity = severityFilter.value;
+        const status = statusFilter.value;
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const rowSeverity = row.dataset.severity;
+            const rowStatus = row.dataset.status;
+
+            const matchesSearch = text.includes(query);
+            const matchesSeverity = !severity || rowSeverity === severity;
+            const matchesStatus = !status || rowStatus === status;
+
+            if (matchesSearch && matchesSeverity && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        matchCount.innerText = visibleCount;
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    severityFilter.addEventListener('change', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+</script>
+{% endblock %}

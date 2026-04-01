@@ -1,0 +1,417 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityAlert - Plateforme Intelligente de Gestion Urbaine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0B0F19;
+            --accent-orange: #FF6B35;
+            --accent-blue: #3B82F6;
+            --accent-red: #EF4444;
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --glass-bg: rgba(25, 33, 50, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Abstract Background Elements */
+        .bg-blob {
+            position: absolute;
+            filter: blur(120px);
+            opacity: 0.5;
+            z-index: -1;
+            border-radius: 50%;
+            animation: float 20s infinite alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(59, 130, 246, 0.2); }
+        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: rgba(255, 107, 53, 0.15); animation-delay: -10s; }
+        .blob-3 { top: 40%; left: 60%; width: 30vw; height: 30vw; background: rgba(16, 185, 129, 0.15); }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        /* Navigation */
+        nav {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(11, 15, 25, 0.7);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo i {
+            color: var(--accent-orange);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--glass-border);
+            color: white;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B35 0%, #F59E0B 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 25px -5px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 15px 35px -5px rgba(255, 107, 53, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 5% 4rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .badge-new {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60A5FA;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2rem;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #FFF 0%, #94A3B8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-orange {
+            background: linear-gradient(135deg, #FF6B35 0%, #F59E0B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slideUp 1s ease-out;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            animation: slideUp 1.2s ease-out;
+        }
+
+        /* Dashboard Preview */
+        .dashboard-preview {
+            margin-top: 5rem;
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: scaleUp 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dashboard-preview::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(180deg, transparent 50%, var(--bg-color) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(25, 33, 50, 0.6);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .icon-blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.8)); box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3); }
+        .icon-red { background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.8)); box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.3); }
+        .icon-orange { background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8)); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3); }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Animations */
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.95) translateY(40px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; } /* On mobile, we just show "Connexion" button */
+            .hero-actions { flex-direction: column; }
+            .hero-actions .btn { width: 100%; justify-content: center; }
+            .hero-title { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <i class="fas fa-shield-halved"></i>
+            CityAlert
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'dashboard:login' %}" class="nav-link">Connexion</a>
+            <a href="{% url 'dashboard:register' %}" class="btn btn-primary">Créer un compte <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="badge-new">
+                <i class="fas fa-sparkles"></i>
+                CityAlert AI V2.0 est disponible
+            </div>
+            <h1 class="hero-title">
+                <span class="text-gradient">Le système nerveux de</span><br>
+                <span class="text-gradient-orange">votre ville intelligente.</span>
+            </h1>
+            <p class="hero-subtitle">
+                Centralisez, analysez et résolvez les incidents urbains (eau, voirie, électricité) en temps réel avec la puissance de l'Intelligence Artificielle.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'dashboard:register' %}" class="btn btn-primary">
+                    Rejoindre la plateforme <i class="fas fa-bolt"></i>
+                </a>
+                <a href="{% url 'dashboard:login' %}" class="btn btn-outline">
+                    Accès Administrateur <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Fake dashboard placeholder to convey the UI -->
+            <div class="dashboard-preview">
+                <div style="background: rgba(11, 15, 25, 0.9); padding: 20px; text-align: left;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #EF4444;"></div>
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #F59E0B;"></div>
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #10B981;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+                        <div style="height: 100px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);"></div>
+                        <div style="height: 100px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);"></div>
+                        <div style="height: 100px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,107,53,0.3);"></div>
+                    </div>
+                    <div style="height: 250px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon icon-blue">
+                    <i class="fas fa-droplet"></i>
+                </div>
+                <h3 class="feature-title">Réseaux d'Eau</h3>
+                <p class="feature-desc">Signalement immédiat des fuites, ruptures de canalisations et pertes de pression avec géolocalisation haute précision.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon icon-red">
+                    <i class="fas fa-car-burst"></i>
+                </div>
+                <h3 class="feature-title">Sécurité Routière</h3>
+                <p class="feature-desc">Gestion des accidents, obstacles sur la voie publique et détérioration de la chaussée pour une intervention rapide.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon icon-orange">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">Réseaux Électriques</h3>
+                <p class="feature-desc">Suivi des coupures de courant, courts-circuits et éclairages publics défectueux avec assignation automatique.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3 class="feature-title">Analyse IA</h3>
+                <p class="feature-desc">Les photos des signalements sont automatiquement analysées par notre IA pour confirmer et catégoriser l'incident.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);">
+                    <i class="fas fa-map-location-dot"></i>
+                </div>
+                <h3 class="feature-title">Smart Mapping</h3>
+                <p class="feature-desc">Visualisation globale sur carte interactive avec "Heatmaps" pour anticiper les zones à risque.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h3 class="feature-title">Dispatch Automatique</h3>
+                <p class="feature-desc">Notification en temps réel de l'équipe disponible la plus proche du lieu de l'incident.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="text-align: center; padding: 3rem 5%; border-top: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.9rem;">
+        <p>&copy; {% now "Y" %} CityAlert Inc. Tous droits réservés.</p>
+        <p style="margin-top: 5px;">Propulsé par Google Gemini & Data Analytics.</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --accent-orange: #ff6b35;
+            --bg-dark: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            color: #334155;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #0f172a;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ff6b35;
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .mission-box {
+            background: #fff7ed;
+            border-left: 5px solid #ff6b35;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .mission-title {
+            font-weight: 700;
+            color: #9a3412;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .details-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .details-grid td {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .label {
+            color: #64748b;
+            font-size: 13px;
+            text-transform: uppercase;
+            width: 120px;
+        }
+        .value {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        .btn {
+            display: inline-block;
+            background: #ff6b35;
+            color: white !important;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            text-align: center;
+            width: 80%;
+            margin: 20px auto;
+            display: block;
+        }
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ORDRE DE MISSION</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour membre de l'équipe <strong>{{ technician.name }}</strong>,</p>
+            
+            <div class="mission-box">
+                <span class="mission-title">🚀 NOUVEL INCIDENT DÉTECTÉ À PROXIMITÉ</span>
+                Un incident de type <strong>{{ incident.get_category_display }}</strong> a été signalé à environ <strong>{{ distance }} km</strong> de votre position habituelle. Vous avez été assigné pour cette intervention.
+            </div>
+
+            <table class="details-grid">
+                <tr>
+                    <td class="label">Incident ID</td>
+                    <td class="value">#{{ incident.id }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Type</td>
+                    <td class="value">{{ incident.get_category_display }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Gravité</td>
+                    <td class="value">{{ incident.severity }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Adresse</td>
+                    <td class="value">{{ incident.address }}</td>
+                </tr>
+            </table>
+
+            <p>Veuillez vous rendre sur place le plus rapidement possible pour sécuriser la zone et débuter les réparations.</p>
+
+            <a href="https://www.google.com/maps/search/?api=1&query={{ incident.latitude }},{{ incident.longitude }}" class="btn">ITINÉRAIRE GOOGLE MAPS</a>
+        </div>
+        <div class="footer">
+            CityAlert - Système de Gestion des Urgences Urbaines<br>
+            Ceci est une notification automatique, ne pas répondre.
+        </div>
+    </div>
+</body>
+</html>

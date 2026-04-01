@@ -1,0 +1,85 @@
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+/* Main Container */
+.main {
+    font-family: 'Outfit', sans-serif;
+    background-color: #f8fafc;
+}
+
+/* Sidebar Styling */
+section[data-testid="stSidebar"] {
+    background-color: #003366;
+    color: white;
+}
+
+section[data-testid="stSidebar"] .stMarkdown h2 {
+    color: #0099CC;
+}
+
+/* Card Styling for Reports */
+.leak-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1rem;
+    border-left: 5px solid #0099CC;
+    transition: transform 0.2s ease-in-out;
+}
+
+.leak-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Severity Badges */
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-low {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+/* Metric Styling */
+[data-testid="stMetricValue"] {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #003366;
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+/* Header Styling */
+.main-header {
+    background: linear-gradient(135deg, #003366 0%, #0099CC 100%);
+    padding: 2rem;
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.main-header h1 {
+    margin: 0;
+    font-weight: 700;
+}

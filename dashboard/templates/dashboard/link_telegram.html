@@ -1,0 +1,176 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lier Telegram - CityAlert{% endblock %}
+
+{% block content %}
+<div class="user-dashboard">
+    <div class="welcome-card">
+        <div class="welcome-content">
+            <h1><i class="fab fa-telegram"></i> Lier votre compte Telegram</h1>
+            <p>Connectez votre compte Telegram pour signaler des incidents directement depuis l'app Telegram.</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="content-card">
+            <div class="card-header">
+                <h3><i class="fab fa-telegram"></i> Instructions de liaison</h3>
+            </div>
+            <div class="content-body">
+                <div class="telegram-setup">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Ouvrez Telegram</h4>
+                            <p>Recherchez et ouvrez l'application Telegram sur votre téléphone ou ordinateur.</p>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Trouvez notre bot</h4>
+                            <p>Recherchez <strong>@{{ bot_username }}</strong> dans Telegram et cliquez sur "Démarrer".</p>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Liez votre compte</h4>
+                            <p>Envoyez la commande <code>/start</code> au bot. Votre compte sera automatiquement lié.</p>
+                        </div>
+                    </div>
+
+                    <div class="telegram-features">
+                        <h4>🚀 Fonctionnalités disponibles via Telegram :</h4>
+                        <ul>
+                            <li><i class="fas fa-exclamation-triangle"></i> Signaler des incidents en temps réel</li>
+                            <li><i class="fas fa-map-marked-alt"></i> Partager votre localisation GPS</li>
+                            <li><i class="fas fa-list"></i> Consulter vos signalements</li>
+                            <li><i class="fas fa-bell"></i> Recevoir des notifications de statut</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3><i class="fas fa-qrcode"></i> QR Code d'accès rapide</h3>
+            </div>
+            <div class="content-body">
+                <div class="qr-container">
+                    <div id="qrcode"></div>
+                    <p class="qr-text">Scannez ce QR code avec Telegram pour accéder directement au bot</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.telegram-setup {
+    max-width: none;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-orange);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.step-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.telegram-features {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.telegram-features h4 {
+    margin: 0 0 1rem 0;
+    color: var(--accent-blue);
+}
+
+.telegram-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.telegram-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.telegram-features li:last-child {
+    margin-bottom: 0;
+}
+
+.qr-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.qr-container #qrcode {
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.qr-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate QR code for Telegram bot
+    const botUrl = 'https://t.me/{{ bot_username }}';
+    new QRCode(document.getElementById('qrcode'), {
+        text: botUrl,
+        width: 200,
+        height: 200,
+        colorDark: '#ffffff',
+        colorLight: '#1a1a2e',
+        correctLevel: QRCode.CorrectLevel.H
+    });
+});
+</script>
+{% endblock %}

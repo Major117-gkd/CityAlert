@@ -1,0 +1,134 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="glass-card" style="padding: 2.5rem;">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Nom Complet</label>
+                <input type="text" name="name" required placeholder="Ex: Jean Dupont" 
+                       style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                       onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Catégorie d'Intervention</label>
+                <select name="category" required 
+                        style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s; cursor: pointer; appearance: none;">
+                    <option value="Eau">Fuite d'eau</option>
+                    <option value="Accident">Accident de la route</option>
+                    <option value="Electricité">Court-circuit / Panne</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Spécialité / Expertise Précise</label>
+                <input type="text" name="specialty" required placeholder="Ex: Plomberie Urbaine, Électricité..." 
+                       style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                       onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Adresse Email de l'Équipe</label>
+                <input type="email" name="email" required placeholder="Ex: equipe.eau@cityalert.com" 
+                       style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                       onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Téléphone de Contact</label>
+                <input type="text" name="phone" placeholder="Ex: +33 6 12 34 56 78" 
+                       style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                       onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Latitude Basée</label>
+                    <input type="number" step="any" name="latitude" required placeholder="Ex: 48.8566" 
+                           style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                           onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Longitude Basée</label>
+                    <input type="number" step="any" name="longitude" required placeholder="Ex: 2.3522" 
+                           style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                           onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase;">Localisation de la Base (Cliquez sur la carte)</label>
+                <div id="map-picker" style="height: 300px; width: 100%; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;"></div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Latitude</label>
+                        <input type="number" step="any" name="latitude" id="id_latitude" required placeholder="0.0000" 
+                               style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                               onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Longitude</label>
+                        <input type="number" step="any" name="longitude" id="id_longitude" required placeholder="0.0000" 
+                               style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 12px; color: white; outline: none; transition: 0.3s;"
+                               onfocus="this.style.borderColor='var(--accent-orange)'" onblur="this.style.borderColor='var(--border-color)'">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 3rem;">
+                <a href="{% url 'dashboard:technician_list' %}" class="glass-card" style="flex: 1; padding: 1rem; text-align: center; color: var(--text-muted); text-decoration: none; font-weight: 600;">Annuler</a>
+                <button type="submit" class="glass-card" style="flex: 2; padding: 1rem; background: var(--accent-orange); color: white; border: none; font-weight: 700; cursor: pointer; transition: 0.3s;" 
+                        onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    Enregistrer le Membre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts pour la carte -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation de la carte centrée sur Montpellier par défaut (ou centre de la France)
+    const map = L.map('map-picker').setView([43.6107, 3.8767], 12);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    let marker;
+
+    map.on('click', function(e) {
+        const lat = e.latlng.lat.toFixed(6);
+        const lng = e.latlng.lng.toFixed(6);
+
+        // Mettre à jour les inputs
+        document.getElementById('id_latitude').value = lat;
+        document.getElementById('id_longitude').value = lng;
+
+        // Placer ou déplacer le marqueur
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng, {
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32]
+                })
+            }).addTo(map);
+        }
+    });
+});
+</script>
+{% endblock %}

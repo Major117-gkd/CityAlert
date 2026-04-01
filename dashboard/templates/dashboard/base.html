@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>{% block title %}CityAlert | Gestion Urbaine Intégrée{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Custom CSS (Reuse existing dark theme) -->
+    <style>
+        :root {
+            /* Neon Midnight (Default Dark) */
+            --primary-bg: #030712;
+            --sidebar-bg: rgba(15, 23, 42, 0.45);
+            --sidebar-text: #94a3b8;
+            --sidebar-active: #ffffff;
+            --accent-orange: #ff3366; 
+            --accent-blue: #00f0ff;   
+            --accent-red: #ff0055;
+            --accent-yellow: #ffb800;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #00e676;
+            --danger: #ff0055;
+            --glow-blue: rgba(0, 240, 255, 0.15);
+            --glow-pink: rgba(255, 51, 102, 0.12);
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --glass-blur: blur(20px);
+            --header-gradient: linear-gradient(90deg, #020617 0%, #020617 45%, rgba(15, 23, 42, 0.98) 100%);
+        }
+
+        body.light-theme {
+            /* Cyber Arctic (Light Mode) */
+            --primary-bg: #f8fafc;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #64748b;
+            --sidebar-active: #0f172a;
+            --accent-orange: #f43f5e;
+            --accent-blue: #2563eb;
+            --accent-red: #dc2626;
+            --accent-yellow: #d97706;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border-color: rgba(15, 23, 42, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #059669;
+            --danger: #e11d48;
+            --glow-blue: rgba(59, 130, 246, 0.1);
+            --glow-pink: rgba(244, 63, 94, 0.08);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --glass-blur: blur(15px);
+            --header-gradient: linear-gradient(90deg, #f1f5f9 0%, #f1f5f9 45%, rgba(241, 245, 249, 0.95) 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--primary-bg); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; position: relative; }
+        
+        /* Animated Smart City Ambient Glow */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(90px);
+            animation: floatGlow 20s ease-in-out infinite alternate;
+        }
+        body::before {
+            top: -20%;
+            left: -10%;
+            background: radial-gradient(circle, var(--glow-blue) 0%, transparent 65%);
+        }
+        body::after {
+            bottom: -20%;
+            right: -10%;
+            background: radial-gradient(circle, var(--glow-pink) 0%, transparent 65%);
+            animation-direction: alternate-reverse;
+            animation-duration: 25s;
+        }
+        @keyframes floatGlow {
+            0% { transform: scale(1) translate(0, 0); }
+            50% { transform: scale(1.2) translate(50px, -50px); }
+            100% { transform: scale(0.9) translate(-30px, 40px); }
+        }
+
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); color: var(--sidebar-text); padding: 2rem 1.25rem; position: fixed; height: 100vh; border-right: 1px solid var(--border-color); overflow-y: auto; z-index: 100; }
+        /* Scrollbar custom for sidebar */
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-orange); }
+
+        /* Micro-animations */
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .main-content { animation: fadeInSlide 0.6s ease-out; }
+        
+        /* Toast Notification Styles */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast { 
+            background: rgba(15, 23, 42, 0.9); 
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--accent-orange);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.4s ease-out;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .sidebar-header { margin-bottom: 2.5rem; display: flex; align-items: center; gap: 10px; }
+        .sidebar-header i { font-size: 1.8rem; color: var(--accent-blue); text-shadow: 0 0 15px var(--accent-blue); animation: pulseNeon 2s infinite alternate; }
+        .sidebar-header h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #fff, var(--accent-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        @keyframes pulseNeon {
+            from { filter: drop-shadow(0 0 5px var(--accent-blue)); }
+            to { filter: drop-shadow(0 0 15px var(--accent-blue)); }
+        }
+
+        .nav-menu { list-style: none; flex-grow: 1; }
+        .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; color: var(--sidebar-text); text-decoration: none; border-radius: 12px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight: 500; font-size: 0.95rem; border: 1px solid transparent; }
+        .nav-link i { width: 24px; margin-right: 0.85rem; font-size: 1.15rem; text-align: center; transition: 0.3s; }
+        .nav-link:hover { background: rgba(255,255,255,0.03); color: #fff; transform: translateX(5px); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .nav-link:hover i { color: var(--accent-blue); }
+        .nav-link.active { background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), transparent); color: #fff; border-left: 3px solid var(--accent-blue); border-radius: 0 12px 12px 0; }
+        .nav-link.active i { color: var(--accent-blue); text-shadow: 0 0 10px var(--accent-blue); }
+
+        .nav-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 1.25rem 0 0.5rem 1rem; font-weight: 700; opacity: 0.6; }
+
+        .main-container { flex-grow: 1; margin-left: 280px; padding: 2.5rem; display: flex; flex-direction: column; }
+        .top-bar { 
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2.5rem;
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.7));
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            margin-left: -2.5rem;
+            margin-right: -2.5rem;
+        }
+        
+        .header-main-group {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .header-info h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        .header-icon-main {
+            font-size: 1.4rem;
+            color: var(--accent-blue);
+            filter: drop-shadow(0 0 8px var(--accent-blue));
+            animation: satellitePulse 3s infinite ease-in-out;
+        }
+
+        @keyframes satellitePulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; filter: drop-shadow(0 0 5px var(--accent-blue)); }
+            50% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: drop-shadow(0 0 15px var(--accent-blue)); }
+        }
+
+        .header-info p {
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+        
+        .glass-card { 
+            background: var(--card-bg); 
+            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border-color); 
+            border-radius: 20px; 
+            box-shadow: var(--shadow);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            transform: skewX(-20deg);
+            transition: 0.7s;
+        }
+        .glass-card:hover::before {
+            left: 150%;
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 240, 255, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1);
+        }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: var(--accent-orange); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
+        .user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+        .user-chip-role {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.15);
+            color: #e5e7eb;
+        }
+        .user-chip-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #f9fafb;
+        }
+
+        /* Profil Sidebar Premium */
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.4);
+            margin-top: auto;
+        }
+        .footer-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            transition: 0.3s;
+        }
+        .footer-content:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .user-avatar.sidebar-avatar {
+            width: 42px; height: 42px;
+            position: relative;
+            background: linear-gradient(135deg, var(--accent-orange), #f7931e);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .avatar-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 50%;
+        }
+        .status-indicator {
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 12px; height: 12px;
+            background: #10b981;
+            border: 2px solid #1e293b;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+            animation: statusPulse 2s infinite;
+            z-index: 10;
+        }
+        @keyframes statusPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .user-role { font-size: 0.7rem; color: var(--text-muted); display: block; }
+        
+        .user-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .action-icon { 
+            width: 32px; height: 32px; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; background: rgba(255,255,255,0.05);
+            color: var(--text-muted); transition: 0.2s; font-size: 0.8rem;
+        }
+        .action-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .action-logout:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .logout-form { display: none; }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; z-index: 1050; }
+            .sidebar-header h2, .nav-link span, .nav-label { display: none; }
+            .main-container { margin-left: 80px; }
+            .sidebar-footer .user-info, .sidebar-footer .user-avatar .status-indicator { display: none; }
+            .footer-content { justify-content: center; padding: 0.5rem; }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 280px; transition: transform 0.3s ease; }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .sidebar.mobile-open .sidebar-header h2, .sidebar.mobile-open .nav-link span, .sidebar.mobile-open .nav-label, .sidebar.mobile-open .sidebar-footer p, .sidebar.mobile-open .sidebar-footer a { display: block; }
+            
+            .main-container { margin-left: 0 !important; padding: 1.5rem; }
+            .top-bar { flex-direction: column; align-items: stretch; gap: 1rem; }
+            .top-bar-header { display: flex; align-items: center; gap: 15px; }
+            #mobileToggle { display: block !important; }
+            
+            /* Responsive Utilities */
+            .hidden-mobile { display: none !important; }
+        }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1040; display: none; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
+
+        /* Chatbox Styles */
+        .chat-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-orange);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
+            z-index: 1000;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chat-fab:hover { transform: scale(1.1) rotate(5deg); }
+
+        .chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: rgba(30, 41, 59, 0.95);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            z-index: 999;
+            transform-origin: bottom right;
+            transition: 0.3s;
+        }
+        .chat-header {
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-header h3 { font-size: 1rem; color: #fff; }
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .message.bot { background: rgba(255,255,255,0.05); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message.user { background: var(--accent-orange); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-area {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+        }
+        .chat-input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.6rem 1rem;
+            color: #fff;
+            outline: none;
+        }
+        .chat-voice-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .chat-voice-btn.recording {
+            background: var(--danger);
+            border-color: var(--danger);
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .chat-send {
+            background: var(--accent-orange);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        /* Modal Notification System */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; transition: 0.3s;
+        }
+        .modal-content {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 24px; padding: 2.5rem; max-width: 500px; width: 90%;
+            text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2.5rem; }
+        .modal-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .modal-icon.error { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #fff; }
+        .modal-text { color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem; font-size: 0.95rem; }
+        .modal-btn { padding: 1rem 2rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; width: 100%; }
+        .modal-btn.success { background: var(--success); color: white; }
+        .modal-btn.error { background: var(--danger); color: white; }
+        .modal-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .action-btn-theme {
+        background: none;
+        border: none;
+        color: var(--sidebar-text);
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    .action-btn-theme:hover { transform: scale(1.1); }
+    .toast-title { font-weight: 800; font-size: 0.9rem; }
+    .toast-message { font-size: 0.8rem; opacity: 0.9; }
+</style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-halved"></i>
+            <h2>CityAlert</h2>
+        </div>
+        {% if user.is_staff %}
+        <ul class="nav-menu">
+            <li class="nav-label">Général</li>
+            <li class="nav-item"><a href="{% url 'dashboard:dashboard_index' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}"><i class="fas fa-chart-pie"></i><span>Aperçu Global</span></a></li>
+            <li class="nav-label">Catégories d'Incidents</li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'eau' %}" class="nav-link"><i class="fas fa-droplet color-eau"></i><span>Fuites d'Eau</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'accident' %}" class="nav-link"><i class="fas fa-car-burst color-accident"></i><span>Accidents Route</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'electricite' %}" class="nav-link"><i class="fas fa-bolt color-electricite"></i><span>Électricité / Circuits</span></a></li>
+            <li class="nav-label">Opérations</li>
+            <li class="nav-item"><a href="{% url 'dashboard:report_incident' %}" class="nav-link {% if request.resolver_match.url_name == 'report_incident' %}active{% endif %}"><i class="fas fa-bullhorn color-other"></i><span>Signaler un Incident</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list' %}" class="nav-link"><i class="fas fa-list-check"></i><span>Tous les Incidents</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:technician_list' %}" class="nav-link {% if request.resolver_match.url_name == 'technician_list' %}active{% endif %}"><i class="fas fa-users-gear"></i><span>Techniciens</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:user_management' %}" class="nav-link {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}"><i class="fas fa-user-gear"></i><span>Gestion User</span></a></li>
+            <li class="nav-label">Système</li>
+            <li class="nav-item"><a href="{% url 'dashboard:analytics_view' %}" class="nav-link"><i class="fas fa-file-waveform"></i><span>Analytiques</span></a></li>
+        </ul>
+        {% else %}
+        <ul class="nav-menu">
+            <li class="nav-label">Citoyen</li>
+            <li class="nav-item"><a href="{% url 'dashboard:dashboard_index' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}"><i class="fas fa-home"></i><span>Tableau de Bord</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:report_incident' %}" class="nav-link {% if request.resolver_match.url_name == 'report_incident' %}active{% endif %}"><i class="fas fa-plus-circle"></i><span>Signaler une Alerte</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:user_incidents' %}" class="nav-link {% if request.resolver_match.url_name == 'user_incidents' %}active{% endif %}"><i class="fas fa-list-ul"></i><span>Mes Signalements</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:profile_view' %}" class="nav-link {% if request.resolver_match.url_name == 'profile_view' %}active{% endif %}"><i class="fas fa-user-circle"></i><span>Mon Profil</span></a></li>
+        </ul>
+        {% endif %}
+        <div class="sidebar-footer">
+            <div class="footer-content">
+                <div class="user-avatar sidebar-avatar">
+                    {% if user_profile.avatar %}
+                        <img id="sidebarAvatarImg" src="{{ user_profile.avatar.url }}" alt="Avatar" class="avatar-img" />
+                    {% else %}
+                        <span id="sidebarAvatarLetter">{{ user.username|first|upper }}</span>
+                    {% endif %}
+                    <div class="status-indicator"></div>
+                </div>
+                <div class="user-info">
+                    <p class="user-name">{{ user.username|capfirst }}</p>
+                    <span class="user-role">{% if user.is_staff %}Administrateur{% else %}Citoyen{% endif %}</span>
+                    <div class="user-actions">
+                        <a href="{% url 'dashboard:profile_view' %}" class="action-icon" title="Mon Profil">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                        <button id="themeToggle" class="action-btn-theme" title="Changer le thème">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                        <form action="{% url 'dashboard:logout' %}" method="post" id="logoutForm" class="logout-form">
+                            {% csrf_token %}
+                        </form>
+                        <a href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit();" class="action-icon action-logout" title="Déconnexion">
+                            <i class="fas fa-power-off"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="overlay" id="sidebarOverlay"></div>
+
+    <main class="main-container">
+        <div id="toast-container"></div>
+        {% if request.resolver_match.url_name == 'dashboard_index' %}
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <div class="header-main-group">
+                    <button id="mobileToggle" class="mobile-toggle-btn" title="Ouvrir le menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-info">
+                        <h1>{% block header_title %}{% endblock %}</h1>
+                        <p class="hidden-mobile">{% block header_subtitle %}{% endblock %}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-actions-container">
+                {% block header_actions %}{% endblock %}
+            </div>
+        </div>
+        {% endif %}
+
+        <section class="content">
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+
+    <!-- Chatbox UI -->
+    <div class="chat-fab" id="chatFab">
+        <i class="fas fa-comment-dots"></i>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="user-avatar chat-avatar">AI</div>
+            <div class="chat-status-box">
+                <h3>Assistant CityAlert</h3>
+                <p class="status-text">En ligne</p>
+            </div>
+            <i class="fas fa-times close-chat-icon" id="closeChat"></i>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">Bonjour ! Je suis l'assistant CityAlert. Comment puis-je vous aider aujourd'hui ?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Posez une question...">
+            <button class="chat-voice-btn" id="voiceBtn" title="Enregistrer un message vocal">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="chat-send" id="chatSend"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        </div>
+
+    <!-- Modal Notification UI -->
+    <div id="notificationModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div id="modalIcon" class="modal-icon"></div>
+            <h3 id="modalTitle" class="modal-title"></h3>
+            <p id="modalText" class="modal-text"></p>
+            <button id="modalBtn" class="modal-btn" onclick="closeNotification()">Compris</button>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        const CHAT_HISTORY_KEY = 'cityalert_chat_history';
+        const chatFab = document.getElementById('chatFab');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChat = document.getElementById('closeChat');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+
+        function loadChatHistory() {
+            const raw = localStorage.getItem(CHAT_HISTORY_KEY);
+            if (!raw) return;
+
+            try {
+                const history = JSON.parse(raw);
+                history.forEach(({ text, type }) => {
+                    appendMessageElement(text, type);
+                });
+            } catch (e) {
+                console.warn('Impossible de charger l\'historique du chat', e);
+            }
+        }
+
+        function saveChatHistory() {
+            const messages = Array.from(chatMessages.querySelectorAll('.message')).map(el => ({
+                text: el.innerText,
+                type: el.classList.contains('user') ? 'user' : 'bot'
+            }));
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages.slice(-100)));
+        }
+
+        function appendMessageElement(text, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerText = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return div;
+        }
+
+        chatFab.onclick = () => {
+            chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+        };
+
+        closeChat.onclick = () => chatWindow.style.display = 'none';
+
+        async function sendMessage() {
+            const msg = chatInput.value.trim();
+            if(!msg) return;
+
+            // Add user message to UI
+            appendMessageElement(msg, 'user');
+            saveChatHistory();
+            chatInput.value = '';
+
+            // Loading state
+            const loadingMsg = appendMessageElement('...', 'bot');
+            saveChatHistory();
+
+            try {
+                const response = await fetch("{% url 'dashboard:chat_with_gemini' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await response.json();
+                loadingMsg.remove();
+                appendMessageElement(data.response, 'bot');
+                saveChatHistory();
+            } catch (e) {
+                loadingMsg.innerText = "Désolé, une erreur est survenue.";
+                saveChatHistory();
+            }
+        }
+
+        chatSend.onclick = sendMessage;
+        chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+
+        // Load stored chat history when the page loads
+        loadChatHistory();
+
+        // Voice Recording Logic
+        let mediaRecorder;
+        let audioChunks = [];
+        const voiceBtn = document.getElementById('voiceBtn');
+
+        voiceBtn.onclick = async () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    sendVoiceMessage(audioBlob);
+                    
+                    // Stop all tracks in the stream
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                voiceBtn.classList.add('recording');
+                voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                showNotification("Microphone", "Enregistrement en cours...", "info");
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                showNotification("Erreur", "Impossible d'accéder au microphone.", "error");
+            }
+        };
+
+        async function sendVoiceMessage(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'voice_message.wav');
+            
+            const loadingMsg = addMessage('Transcription en cours...', 'bot');
+
+            try {
+                const response = await fetch("{% url 'dashboard:transcribe_audio' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                loadingMsg.remove();
+                
+                if (data.status === 'success') {
+                    // Show transcribed text as a user message
+                    addMessage(data.transcript, 'user');
+                    // Get AI response for the transcript
+                    getAIResponse(data.transcript);
+                } else {
+                    addMessage("Erreur de transcription : " + (data.message || "inconnue"), 'bot');
+                }
+            } catch (e) {
+                loadingMsg.innerText = "Erreur lors de l'envoi du vocal.";
+            }
+        }
+
+        async function getAIResponse(text) {
+            const loadingMsg = addMessage('...', 'bot');
+            try {
+                const response = await fetch("{% url 'dashboard:chat_with_gemini' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                loadingMsg.remove();
+                addMessage(data.response, 'bot');
+            } catch (e) {
+                loadingMsg.innerText = "Désolé, une erreur est survenue.";
+            }
+        }
+        function showModalNotification(title, text, type = 'success') {
+            const modal = document.getElementById('notificationModal');
+            const icon = document.getElementById('modalIcon');
+            const t = document.getElementById('modalTitle');
+            const m = document.getElementById('modalText');
+            const b = document.getElementById('modalBtn');
+
+            icon.className = `modal-icon ${type}`;
+            icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>';
+            t.innerText = title;
+            m.innerText = text;
+            b.className = `modal-btn ${type}`;
+            
+            modal.classList.add('active');
+        }
+
+        function closeNotification() {
+            document.getElementById('notificationModal').classList.remove('active');
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.4s ease-in forwards';
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        // Theme Management Logic
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const bodyTag = document.body;
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                bodyTag.classList.add('light-theme');
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                bodyTag.classList.remove('light-theme');
+                themeIcon.className = 'fas fa-moon';
+            }
+            localStorage.setItem('cityalert_theme', theme);
+        }
+
+        const savedTheme = localStorage.getItem('cityalert_theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isLight = bodyTag.classList.contains('light-theme');
+            applyTheme(isLight ? 'dark' : 'light');
+        });
+
+        // Mobile Sidebar Toggle
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            });
+            
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

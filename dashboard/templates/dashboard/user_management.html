@@ -1,0 +1,482 @@
+{% block extra_css %}
+<style>
+    .btn-add-user {
+        background: var(--accent-orange);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.3s;
+    }
+
+    .manage-table-card {
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .manage-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .table-header-row {
+        border-bottom: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .manage-th {
+        padding: 1.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .manage-tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: 0.3s;
+    }
+
+    .manage-tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .manage-td {
+        padding: 1.5rem;
+    }
+
+    .align-right {
+        text-align: right;
+    }
+
+    .user-display-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar-sm {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        background: var(--accent-blue);
+        color: white;
+    }
+
+    .username-text {
+        font-weight: 600;
+        margin-bottom: 2px;
+        color: var(--text-main);
+    }
+
+    .email-text {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .badge-role {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-role.staff {
+        background: rgba(255, 107, 53, 0.1);
+        color: var(--accent-orange);
+    }
+
+    .badge-role.citizen {
+        background: rgba(56, 189, 248, 0.1);
+        color: var(--accent-blue);
+    }
+
+    .status-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-display.active { color: var(--success); }
+    .status-display.inactive { color: var(--danger); }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .active .status-dot { background: var(--success); }
+    .inactive .status-dot { background: var(--danger); }
+
+    .action-btn-group {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .action-btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        background: rgba(255, 107, 53, 0.05);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .action-btn-sm:hover {
+        background: rgba(255, 107, 53, 0.1);
+        border-color: var(--accent-orange);
+        color: var(--accent-orange);
+    }
+
+    .self-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    /* Modal Styling */
+    .modal-content-lg {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .modal-close-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: 0.3s;
+    }
+
+    .modal-close-btn:hover { color: var(--danger); }
+
+    .form-group-glow {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label-caps {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.1em;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1.25rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .form-input-cyber {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: white;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-input-cyber:focus {
+        border-color: var(--accent-orange);
+        background: rgba(255, 107, 53, 0.05);
+        box-shadow: 0 0 15px rgba(255, 107, 53, 0.1);
+        outline: none;
+    }
+
+    .form-check-cyber {
+        margin: 2rem 0;
+    }
+
+    .cyber-checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        color: var(--text-main);
+    }
+
+    .cyber-checkbox-container input { display: none; }
+
+    .cyber-checkmark {
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        position: relative;
+        transition: 0.3s;
+    }
+
+    .cyber-checkbox-container input:checked ~ .cyber-checkmark {
+        background: var(--accent-orange);
+        border-color: var(--accent-orange);
+    }
+
+    .cyber-checkmark::after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .cyber-checkbox-container input:checked ~ .cyber-checkmark::after {
+        display: block;
+    }
+
+    .form-actions-modal {
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<button onclick="openAddUserModal()" class="glass-btn btn-add-user">
+    <i class="fas fa-user-plus"></i>
+    <span>Ajouter un Utilisateur</span>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card manage-table-card">
+    <div class="table-responsive">
+        <table class="manage-table">
+            <thead>
+                <tr class="table-header-row">
+                    <th class="manage-th">Utilisateur</th>
+                    <th class="manage-th">Rôle</th>
+                    <th class="manage-th">Statut</th>
+                    <th class="manage-th">Date d'inscription</th>
+                    <th class="manage-th align-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr class="manage-tr">
+                    <td class="manage-td">
+                        <div class="user-display-group">
+                            <div class="user-avatar-sm">{{ u.username.0|upper }}</div>
+                            <div class="user-meta">
+                                <p class="username-text">{{ u.username }}</p>
+                                <p class="email-text">{{ u.email|default:"Pas d'email" }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="manage-td">
+                        <span id="role-{{ u.id }}" class="status-badge badge-role {% if u.is_staff %}staff{% else %}citizen{% endif %}">
+                            {% if u.is_staff %}Administrateur{% else %}Citoyen{% endif %}
+                        </span>
+                    </td>
+                    <td class="manage-td">
+                        <span id="status-{{ u.id }}" class="status-display {% if u.is_active %}active{% else %}inactive{% endif %}">
+                            <div class="status-dot"></div>
+                            <span class="status-text">{% if u.is_active %}Actif{% else %}Désactivé{% endif %}</span>
+                        </span>
+                    </td>
+                    <td class="manage-td date-joined">
+                        {{ u.date_joined|date:"d M Y" }}
+                    </td>
+                    <td class="manage-td align-right">
+                        {% if u != user %}
+                        <div class="action-btn-group">
+                            <button onclick="toggleUser({{ u.id }}, 'toggle_staff')" class="action-btn-sm toggle-role">
+                                <i class="fas fa-user-shield"></i> <span>Rôle</span>
+                            </button>
+                            <button onclick="toggleUser({{ u.id }}, 'toggle_active')" class="action-btn-sm toggle-status">
+                                <i class="fas fa-power-off"></i> <span>{% if u.is_active %}Désactiver{% else %}Activer{% endif %}</span>
+                            </button>
+                        </div>
+                        {% else %}
+                        <span class="self-label">(Vous-même)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Ajout Utilisateur -->
+<div id="addUserModal" class="modal-overlay">
+    <div class="modal-content-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Nouvel Utilisateur</h3>
+            <button onclick="closeAddUserModal()" class="modal-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="addUserForm" onsubmit="submitAddUser(event)" class="modal-form-quantum">
+            {% csrf_token %}
+            <div class="form-group-glow">
+                <label class="form-label-caps">Nom d'utilisateur</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" name="username" required placeholder="Ex: jean_dupont" class="form-input-cyber">
+                </div>
+            </div>
+            
+            <div class="form-group-glow">
+                <label class="form-label-caps">Adresse Email</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" name="email" required placeholder="Ex: jean@example.com" class="form-input-cyber">
+                </div>
+            </div>
+            
+            <div class="form-group-glow">
+                <label class="form-label-caps">Mot de passe</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" name="password" required placeholder="••••••••" class="form-input-cyber">
+                </div>
+            </div>
+            
+            <div class="form-check-cyber">
+                <label class="cyber-checkbox-container">
+                    <input type="checkbox" name="is_staff" id="is_staff_check">
+                    <span class="cyber-checkmark"></span>
+                    <span class="check-label">Accès Administrateur (Staff)</span>
+                </label>
+            </div>
+            
+            <div class="form-actions-modal">
+                <button type="submit" class="quantum-btn">
+                    <span class="btn-content">Créer le compte</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function toggleUser(userId, action) {
+        fetch(`/toggle-user-status/${userId}/?action=${action}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update role badge
+                    const roleBadge = document.getElementById(`role-${userId}`);
+                    if (data.is_staff) {
+                        roleBadge.innerText = 'Administrateur';
+                        roleBadge.style.background = 'rgba(255, 107, 53, 0.1)';
+                        roleBadge.style.color = 'var(--accent-orange)';
+                    } else {
+                        roleBadge.innerText = 'Citoyen';
+                        roleBadge.style.background = 'rgba(56, 189, 248, 0.1)';
+                        roleBadge.style.color = 'var(--accent-blue)';
+                    }
+
+                    // Update status text
+                    const statusSpan = document.getElementById(`status-${userId}`);
+                    const color = data.is_active ? 'var(--success)' : 'var(--danger)';
+                    statusSpan.style.color = color;
+                    statusSpan.innerHTML = `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></div> ${data.is_active ? 'Actif' : 'Désactivé'}`;
+                    
+                    showNotification('Mise à jour réussie', 'Les informations de l\'utilisateur ont été modifiées.', 'success');
+                } else {
+                    showNotification('Erreur', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Erreur', 'Impossible de modifier l\'utilisateur.', 'error');
+            });
+    }
+
+    function openAddUserModal() {
+        document.getElementById('addUserModal').classList.add('active');
+    }
+
+    function closeAddUserModal() {
+        document.getElementById('addUserModal').classList.remove('active');
+    }
+
+    function submitAddUser(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Handle checkbox manually for boolean value
+        const isStaff = document.getElementById('is_staff_check').checked;
+        formData.set('is_staff', isStaff);
+
+        fetch('{% url "dashboard:add_user" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Succès', 'Utilisateur créé avec succès !', 'success');
+                closeAddUserModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Erreur', data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Erreur', 'Une erreur est survenue lors de la création.', 'error');
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

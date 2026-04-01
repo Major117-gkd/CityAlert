@@ -1,0 +1,28 @@
+# Environment variables
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+*.exe
+*.dll
+*.so
+
+# Data and SQLite
+*.db
+*.sqlite3
+data/*.db
+data/*.sqlite3
+
+# Uploads and temporary files
+uploads/*
+!uploads/.gitkeep
+.streamlit/
+.vscode/
+.idea/
+*.log

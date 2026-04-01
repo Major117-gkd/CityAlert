@@ -1,0 +1,81 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-container {
+        padding: 1.5rem;
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text-main);
+    }
+    th {
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+    tr:hover {
+        background: rgba(255,255,255,0.02);
+    }
+    .badge {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-Signalé { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .badge-En-cours { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .badge-Réparé { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Citoyen</th>
+                <th>Localisation</th>
+                <th>Sévérité</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leak in leaks %}
+            <tr>
+                <td>#{{ leak.id }}</td>
+                <td><div style="font-weight: 600;">{{ leak.user_name }}</div></td>
+                <td>{{ leak.address|truncatechars:40 }}</td>
+                <td>
+                    <span style="color: {% if leak.severity == 'Critique' %}#ef4444{% elif leak.severity == 'Moyen' %}#f59e0b{% else %}#3b82f6{% endif %}; font-weight: 600;">
+                        {{ leak.severity }}
+                    </span>
+                </td>
+                <td>{{ leak.timestamp|date:"d/m/Y H:i" }}</td>
+                <td><span class="badge badge-{{ leak.status|slugify|default:'Signalé' }}">{{ leak.status }}</span></td>
+                <td>
+                    <button class="glass-card" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; border: 1px solid var(--border-color);">Détails</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

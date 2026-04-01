@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
+        .code-box { background: #f8fafc; border: 2px dashed #ff6b35; padding: 20px; font-size: 2rem; font-weight: 700; text-align: center; letter-spacing: 10px; color: #ff6b35; border-radius: 12px; margin: 20px 0; }
+        .footer { font-size: 0.8rem; color: #64748b; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Réinitialisation de mot de passe - CityAlert</h2>
+        <p>Bonjour {{ user.username }},</p>
+        <p>Vous avez demandé la réinitialisation de votre mot de passe. Voici votre code de vérification à 6 chiffres :</p>
+        
+        <div class="code-box">
+            {{ code }}
+        </div>
+        
+        <p>Ce code est valable pour une utilisation unique. Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>
+        
+        <div class="footer">
+            Cordialement,<br>
+            L'équipe de sécurité CityAlert
+        </div>
+    </div>
+</body>
+</html>

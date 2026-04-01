@@ -1,0 +1,459 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="report-page">
+    <header class="report-header">
+        <div class="report-title">
+            <h1>Signaler un incident</h1>
+            <p>Ajoutez une photo et quelques détails. Nous prenons en charge le reste.</p>
+        </div>
+    </header>
+
+    <form id="reportForm" method="post" enctype="multipart/form-data" action="{% url 'dashboard:report_incident' %}">
+        {% csrf_token %}
+
+        <section class="card">
+            <h2 class="card-title">Photo</h2>
+            <div class="photo-upload" id="photoUpload" onclick="triggerFileInput()" role="button" aria-label="Zone de téléchargement de photo. Cliquez ou glissez une image d'incident ici." tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){triggerFileInput()}">
+                <input type="file" id="imageInput" name="image" accept="image/*" required aria-label="Sélectionner une image d'incident">
+
+                <div class="photo-placeholder" id="photoPlaceholder">
+                    <i class="fas fa-camera-retro"></i>
+                    <p>Glissez une photo ou cliquez pour sélectionner</p>
+                    <small>JPEG/PNG • Max 10 Mo</small>
+                </div>
+
+                <img id="photoPreview" alt="Aperçu" class="photo-preview hidden" />
+            </div>
+            <p class="hint">Une photo est requise pour que le signalement soit pris en compte.</p>
+        </section>
+
+        <input type="hidden" name="latitude" id="latitudeInput" value="">
+        <input type="hidden" name="longitude" id="longitudeInput" value="">
+
+        <!-- Champs remplis automatiquement après analyse IA -->
+        <input type="hidden" name="category" id="categoryInput" value="Eau">
+        <input type="hidden" name="severity" id="severityInput" value="Moyenne">
+        <input type="hidden" name="description" id="descriptionInput" value="">
+
+        <div class="actions">
+            <button type="submit" id="submitBtn" class="btn-primary" disabled aria-label="Envoyer le signalement (désactivé tant qu'une photo valide n'est pas ajoutée)">
+                <i class="fas fa-paper-plane"></i>
+                Envoyer le signalement
+            </button>
+            <p class="hint" id="submitHint">Ajoutez une photo pour activer l'envoi.</p>
+        </div>
+    </form>
+
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</div>
+
+<style>
+:root {
+    --background: transparent;
+    --card-bg: rgba(17, 24, 39, 0.45);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: rgba(226, 232, 240, 0.75);
+    --primary: #00f0ff;
+    --accent: #ff3366;
+}
+
+.report-page {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+    min-height: calc(100vh - 4rem);
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.report-title h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.report-title p {
+    margin: 0.75rem auto 0;
+    max-width: 620px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    padding: 1.75rem 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.card-title {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.photo-upload {
+    position: relative;
+    border: 2px dashed rgba(100, 200, 255, 0.35);
+    border-radius: 18px;
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    padding: 1.25rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.photo-upload:hover {
+    border-color: rgba(100, 200, 255, 0.6);
+    transform: translateY(-1px);
+}
+
+.photo-upload.has-image {
+    border-style: solid;
+}
+
+.photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.photo-placeholder i {
+    font-size: 3.25rem;
+    color: rgba(0, 240, 255, 0.65);
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.photo-placeholder p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.photo-placeholder small {
+    color: var(--text-muted);
+}
+
+.photo-preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.photo-upload input {
+    display: none;
+}
+
+.field {
+    display: grid;
+    gap: 0.55rem;
+    margin-bottom: 1.25rem;
+}
+
+.field label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.55);
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: none;
+    border-color: rgba(0, 240, 255, 0.55);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.small-note p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.actions {
+    text-align: center;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #00f0ff, #0088ff);
+    color: #030712;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0, 240, 255, 0.5);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.hint {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+    .toast-container {
+        position: fixed;
+        bottom: 1.25rem;
+        right: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        z-index: 2000;
+    }
+
+.toast {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+    border-radius: 14px;
+    min-width: 240px;
+    color: white;
+    font-weight: 700;
+    animation: toastIn 0.3s ease;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+.toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+@keyframes toastIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 720px) {
+    .report-page {
+        padding: 1.25rem;
+    }
+
+    .report-title h1 {
+        font-size: 1.9rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+const reportForm = document.getElementById('reportForm');
+const imageInput = document.getElementById('imageInput');
+const photoPreview = document.getElementById('photoPreview');
+const photoPlaceholder = document.getElementById('photoPlaceholder');
+const uploadZone = document.getElementById('photoUpload');
+const submitBtn = document.getElementById('submitBtn');
+const submitHint = document.getElementById('submitHint');
+const latitudeInput = document.getElementById('latitudeInput');
+const longitudeInput = document.getElementById('longitudeInput');
+const categoryInput = document.getElementById('categoryInput');
+const severityInput = document.getElementById('severityInput');
+const descriptionInput = document.getElementById('descriptionInput');
+const toastContainer = document.getElementById('toastContainer');
+
+const analyzeUrl = "{% url 'dashboard:analyze_incident_api' %}";
+
+function triggerFileInput() {
+    imageInput.click();
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(14px)';
+    }, 3200);
+
+    setTimeout(() => toast.remove(), 3800);
+}
+
+let analysisValid = false;
+
+function setUploadState(hasImage) {
+    if (hasImage) {
+        uploadZone.classList.add('has-image');
+        photoPlaceholder.style.display = 'none';
+        submitBtn.disabled = true; // enabled only after analyse confirms valide
+        submitHint.textContent = 'Analyse en cours...';
+        runAnalysis();
+    } else {
+        uploadZone.classList.remove('has-image');
+        photoPlaceholder.style.display = 'flex';
+        photoPreview.style.display = 'none';
+        submitBtn.disabled = true;
+        submitHint.textContent = 'Ajoutez une photo pour activer l’envoi.';
+        analysisValid = false;
+    }
+}
+
+async function runAnalysis() {
+    const file = imageInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch(analyzeUrl, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const data = await response.json();
+        if (data.status === 'success' && data.is_valid) {
+            analysisValid = true;
+            categoryInput.value = data.detected_category || categoryInput.value;
+            severityInput.value = data.suggested_severity || severityInput.value;
+            descriptionInput.value = data.ai_comment || descriptionInput.value;
+            submitBtn.disabled = false;
+            submitHint.textContent = 'Prêt à envoyer.';
+            showToast('Analyse réussie ! Vous pouvez envoyer.', 'success');
+        } else {
+            analysisValid = false;
+            submitBtn.disabled = true;
+            submitHint.textContent = 'L’image ne semble pas être un incident valide.';
+            showToast(data.message || 'L’image ne semble pas être un incident valide.', 'error');
+        }
+    } catch (err) {
+        analysisValid = false;
+        submitBtn.disabled = true;
+        submitHint.textContent = 'Erreur d’analyse. Réessayez.';
+        showToast('Erreur lors de l’analyse. Réessayez.', 'error');
+    }
+}
+
+imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (!file) return setUploadState(false);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        photoPreview.src = e.target.result;
+        photoPreview.style.display = 'block';
+        setUploadState(true);
+    };
+    reader.readAsDataURL(file);
+});
+
+function fillGeolocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            latitudeInput.value = position.coords.latitude;
+            longitudeInput.value = position.coords.longitude;
+        },
+        () => {
+            // L'utilisateur a refusé ou une erreur est survenue.
+        },
+        { timeout: 8000 }
+    );
+}
+
+reportForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!imageInput.files.length || !analysisValid) {
+        showToast('Ajoutez une photo valide avant d’envoyer.', 'error');
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+
+    const formData = new FormData(reportForm);
+
+    try {
+        const response = await fetch(reportForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            showToast('Signalement envoyé avec succès !', 'success');
+            setTimeout(() => {
+                window.location.href = "{% url 'dashboard:user_incidents' %}";
+            }, 1200);
+            return;
+        }
+
+        showToast(data.message || 'Erreur lors de l’envoi.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le signalement';
+    } catch (err) {
+        showToast('Erreur réseau. Veuillez réessayer.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le signalement';
+    }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    setUploadState(false);
+    fillGeolocation();
+});
+</script>
+{% endblock %}

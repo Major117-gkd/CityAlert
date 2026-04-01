@@ -1,0 +1,64 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block header_title %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        max-width: 450px;
+        margin: 2rem auto;
+        padding: 2.5rem;
+    }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .form-group input {
+        width: 100%;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: #fff;
+        outline: none;
+    }
+    .form-group input:focus { border-color: var(--accent-orange); }
+    .helptext { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 5px; line-height: 1.4; }
+    .errorlist { color: #ef4444; font-size: 0.8rem; list-style: none; padding: 0; margin-top: 5px; }
+</style>
+
+<div class="glass-card auth-card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <i class="fas fa-user-plus" style="font-size: 2.5rem; color: var(--accent-orange); margin-bottom: 1rem;"></i>
+        <h2 style="color: white;">Créer un compte</h2>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text|safe }}</span>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                            <li><i class="fas fa-circle-exclamation"></i> {{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="glass-card" style="width: 100%; padding: 1rem; background: var(--accent-orange); color: white; border: none; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: 0.3s;">
+            S'inscrire <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
+        </button>
+    </form>
+
+    <div style="margin-top: 2rem; text-align: center; font-size: 0.9rem;">
+        <p style="color: var(--text-muted);">Déjà un compte ? <a href="{% url 'dashboard:login' %}" style="color: var(--accent-orange); text-decoration: none; font-weight: 600;">Se connecter</a></p>
+    </div>
+</div>
+{% endblock %}
