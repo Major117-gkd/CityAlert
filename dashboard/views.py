@@ -128,8 +128,8 @@ def chat_with_gemini(request):
                     'response': f"[Simulation] Pas de clé Gemini configurée. Vous avez demandé : \"{user_message}\".\nPour une vraie réponse IA, définissez GEMINI_API_KEY dans vos variables d'environnement ou dans settings.py."
                 })
 
-            # Using the latest Gemini 1.5 Flash model (stable v1)
-            url = f'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_api_key}'
+            # Using the latest Gemini 2.0 Flash model (v1beta via Google AI Studio)
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
             
             payload = {
                 "contents": [{
@@ -1040,7 +1040,7 @@ def transcribe_audio(request):
             import base64
             audio_data = base64.b64encode(audio_file.read()).decode('utf-8')
             
-            url = f'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_api_key}'
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
             
             payload = {
                 "contents": [{
@@ -1115,7 +1115,7 @@ def _analyze_image_gemini(image_file):
             'suggested_severity': 'Moyenne'
         }
 
-    url = f'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_api_key}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
 
     prompt = f"""
     Tu es un modèle de vision IA qui analyse des photos d'incidents urbains.

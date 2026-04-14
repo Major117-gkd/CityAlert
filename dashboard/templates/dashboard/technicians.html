@@ -55,7 +55,7 @@
         cursor: pointer;
     }
     .tech-info { flex: 1; }
-    .tech-name { font-size: 1.1rem; margin-bottom: 4px; color: #fff; font-weight: 600; }
+    .tech-name { font-size: 1.1rem; margin-bottom: 4px; color: var(--text-main); font-weight: 600; }
     .tech-spec { font-size: 0.8rem; color: var(--accent-blue); font-weight: 500; }
     .status-badge {
         display: inline-flex;
@@ -177,7 +177,7 @@
 </style>
 {% endblock %}
 
-{% {% block content %}
+{% block content %}
 <div class="tech-container">
     {% regroup technicians by get_category_display as tech_groups %}
     
@@ -269,7 +269,6 @@
         </button>
     </div>
 </div>
-/div>
 
 <style>
     @keyframes modalSlide {

@@ -1,3 +1,6 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
 {% block extra_css %}
 <style>
     .btn-add-user {
@@ -30,7 +33,7 @@
 
     .table-header-row {
         border-bottom: 1px solid var(--border-color);
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--nav-hover-bg);
     }
 
     .manage-th {
@@ -47,7 +50,7 @@
     }
 
     .manage-tr:hover {
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--nav-hover-bg);
     }
 
     .manage-td {
@@ -356,7 +359,7 @@
     <div class="modal-content-lg">
         <div class="modal-header">
             <h3 class="modal-title">Nouvel Utilisateur</h3>
-            <button onclick="closeAddUserModal()" class="modal-close-btn">
+            <button onclick="closeAddUserModal()" class="modal-close-btn" title="Fermer la modale" aria-label="Fermer la modale">
                 <i class="fas fa-times"></i>
             </button>
         </div>

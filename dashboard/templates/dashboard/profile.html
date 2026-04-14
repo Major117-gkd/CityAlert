@@ -18,7 +18,7 @@
                         <div class="avatar-placeholder" id="placeholderIcon">
                             <i class="fas fa-user"></i>
                         </div>
-                        <img src="" alt="Avatar" id="avatarPreview" style="display: none;">
+                        <img src="" alt="Avatar" id="avatarPreview" hidden>
                     {% endif %}
                     <label for="id_avatar" class="avatar-edit-btn">
                         <i class="fas fa-camera"></i>
@@ -54,17 +54,17 @@
             </div>
             <form id="profileForm" method="post" enctype="multipart/form-data" class="custom-form">
                 {% csrf_token %}
-                <input type="file" name="avatar" id="id_avatar" style="display: none;" onchange="previewAvatar(this)">
+                <input type="file" name="avatar" id="id_avatar" hidden title="Avatar Upload" aria-label="Télécharger un avatar" onchange="previewAvatar(this)">
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nom d'utilisateur</label>
-                        <input type="text" value="{{ user.username }}" disabled class="disabled-input">
+                        <label for="usernameInput">Nom d'utilisateur</label>
+                        <input type="text" id="usernameInput" title="Nom d'utilisateur" aria-label="Nom d'utilisateur" value="{{ user.username }}" disabled class="disabled-input">
                         <small>Le nom d'utilisateur ne peut pas être modifié.</small>
                     </div>
                     <div class="form-group">
-                        <label>Adresse Email</label>
-                        <input type="text" value="{{ user.email }}" disabled class="disabled-input">
+                        <label for="emailInput">Adresse Email</label>
+                        <input type="text" id="emailInput" title="Adresse Email" aria-label="Adresse Email" value="{{ user.email }}" disabled class="disabled-input">
                     </div>
                 </div>
 
@@ -108,7 +108,7 @@
 .avatar-edit-btn:hover { transform: scale(1.1); background: #ff8c42; }
 
 .profile-info-basic { padding: 1.5rem; }
-.profile-info-basic h2 { margin-bottom: 0.5rem; color: #fff; }
+.profile-info-basic h2 { margin-bottom: 0.5rem; color: var(--text-main); }
 .user-email { color: var(--text-muted); margin-bottom: 1rem; }
 .user-badges { display: flex; justify-content: center; gap: 10px; }
 .badge { padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
@@ -118,18 +118,18 @@
 .profile-stats-mini { display: flex; border-top: 1px solid var(--border-color); margin-top: 1rem; }
 .stat-item { flex: 1; padding: 1.5rem 0; display: flex; flex-direction: column; gap: 5px; }
 .stat-item:first-child { border-right: 1px solid var(--border-color); }
-.stat-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
 .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
 
 .profile-form-card { padding: 2rem; }
 .card-header { margin-bottom: 2rem; }
-.card-header h3 { font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+.card-header h3 { font-size: 1.25rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
 
 .custom-form { display: flex; flex-direction: column; gap: 1.5rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
-.form-group input, .form-group textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.8rem 1rem; color: #fff; font-family: inherit; transition: 0.3s; }
+.form-group input, .form-group textarea { background: var(--nav-hover-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.8rem 1rem; color: var(--text-main); font-family: inherit; transition: 0.3s; }
 .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-orange); outline: none; background: rgba(255, 255, 255, 0.08); }
 .disabled-input { opacity: 0.6; cursor: not-allowed; }
 .form-group small { font-size: 0.75rem; color: var(--text-muted); }

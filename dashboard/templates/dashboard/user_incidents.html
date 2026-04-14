@@ -50,7 +50,7 @@
                             </span>
                         </td>
                         <td>
-                            <a href="{% url 'dashboard:incident_detail' incident.id %}" class="btn-view">
+                            <a href="{% url 'dashboard:incident_detail' incident.id %}" class="btn-view" title="Voir les détails de l'incident" aria-label="Voir les détails de l'incident">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </td>
@@ -106,7 +106,7 @@
 
 .custom-table td {
     padding: 1.25rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
     font-size: 0.95rem;
 }
 
@@ -156,8 +156,8 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    background: var(--action-bg);
+    color: var(--text-main);
     display: flex;
     align-items: center;
     justify-content: center;

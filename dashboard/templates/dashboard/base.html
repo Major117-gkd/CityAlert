@@ -38,6 +38,22 @@
             --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
             --glass-blur: blur(20px);
             --header-gradient: linear-gradient(90deg, #020617 0%, #020617 45%, rgba(15, 23, 42, 0.98) 100%);
+            --header-bg: linear-gradient(to right, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.7));
+            --chip-bg: rgba(15, 23, 42, 0.95);
+            --footer-bg: rgba(15, 23, 42, 0.4);
+            --footer-content-bg: rgba(255, 255, 255, 0.03);
+            --footer-content-hover: rgba(255, 255, 255, 0.06);
+            --footer-border: rgba(255, 255, 255, 0.05);
+            --nav-hover-bg: rgba(255,255,255,0.03);
+            --nav-hover-text: #fff;
+            --nav-border: rgba(255,255,255,0.05);
+            --action-bg: rgba(255,255,255,0.05);
+            --action-hover-bg: rgba(255,255,255,0.1);
+            --action-hover-text: #fff;
+            --title-color: #ffffff;
+            --title-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            --card-hover-border: rgba(0, 240, 255, 0.3);
+            --card-hover-shadow: 0 15px 40px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1);
         }
 
         body.light-theme {
@@ -56,11 +72,27 @@
             --text-muted: #64748b;
             --success: #059669;
             --danger: #e11d48;
-            --glow-blue: rgba(59, 130, 246, 0.1);
-            --glow-pink: rgba(244, 63, 94, 0.08);
+            --glow-blue: rgba(59, 130, 246, 0.15);
+            --glow-pink: rgba(244, 63, 94, 0.12);
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
             --glass-blur: blur(15px);
             --header-gradient: linear-gradient(90deg, #f1f5f9 0%, #f1f5f9 45%, rgba(241, 245, 249, 0.95) 100%);
+            --header-bg: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+            --chip-bg: rgba(255, 255, 255, 0.95);
+            --footer-bg: rgba(241, 245, 249, 0.4);
+            --footer-content-bg: rgba(15, 23, 42, 0.03);
+            --footer-content-hover: rgba(15, 23, 42, 0.06);
+            --footer-border: rgba(15, 23, 42, 0.05);
+            --nav-hover-bg: rgba(15, 23, 42, 0.04);
+            --nav-hover-text: #0f172a;
+            --nav-border: rgba(15, 23, 42, 0.06);
+            --action-bg: rgba(15, 23, 42, 0.05);
+            --action-hover-bg: rgba(15, 23, 42, 0.1);
+            --action-hover-text: #0f172a;
+            --title-color: #0f172a;
+            --title-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+            --card-hover-border: rgba(37, 99, 235, 0.3);
+            --card-hover-shadow: 0 15px 40px 0 rgba(0, 0, 0, 0.12), 0 0 20px rgba(37, 99, 235, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -133,7 +165,7 @@
         }
         .sidebar-header { margin-bottom: 2.5rem; display: flex; align-items: center; gap: 10px; }
         .sidebar-header i { font-size: 1.8rem; color: var(--accent-blue); text-shadow: 0 0 15px var(--accent-blue); animation: pulseNeon 2s infinite alternate; }
-        .sidebar-header h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #fff, var(--accent-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .sidebar-header h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, var(--text-main), var(--accent-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
         @keyframes pulseNeon {
             from { filter: drop-shadow(0 0 5px var(--accent-blue)); }
             to { filter: drop-shadow(0 0 15px var(--accent-blue)); }
@@ -142,9 +174,9 @@
         .nav-menu { list-style: none; flex-grow: 1; }
         .nav-link { display: flex; align-items: center; padding: 0.85rem 1rem; color: var(--sidebar-text); text-decoration: none; border-radius: 12px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight: 500; font-size: 0.95rem; border: 1px solid transparent; }
         .nav-link i { width: 24px; margin-right: 0.85rem; font-size: 1.15rem; text-align: center; transition: 0.3s; }
-        .nav-link:hover { background: rgba(255,255,255,0.03); color: #fff; transform: translateX(5px); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .nav-link:hover { background: var(--nav-hover-bg); color: var(--nav-hover-text); transform: translateX(5px); border-color: var(--nav-border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .nav-link:hover i { color: var(--accent-blue); }
-        .nav-link.active { background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), transparent); color: #fff; border-left: 3px solid var(--accent-blue); border-radius: 0 12px 12px 0; }
+        .nav-link.active { background: linear-gradient(90deg, var(--glow-blue), transparent); color: var(--sidebar-active); border-left: 3px solid var(--accent-blue); border-radius: 0 12px 12px 0; box-shadow: inset 15px 0 25px -15px var(--accent-blue); }
         .nav-link.active i { color: var(--accent-blue); text-shadow: 0 0 10px var(--accent-blue); }
 
         .nav-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 1.25rem 0 0.5rem 1rem; font-weight: 700; opacity: 0.6; }
@@ -158,11 +190,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.5rem 2.5rem;
-            background: linear-gradient(to right, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.7));
+            background: var(--header-bg);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
             margin-left: -2.5rem;
             margin-right: -2.5rem;
@@ -178,12 +210,12 @@
             font-size: 1.8rem;
             font-weight: 800;
             letter-spacing: -0.01em;
-            color: #ffffff;
+            color: var(--title-color);
             display: flex;
             align-items: center;
             gap: 12px;
             margin: 0;
-            text-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            text-shadow: var(--title-shadow);
         }
 
         .header-icon-main {
@@ -232,9 +264,9 @@
             left: 150%;
         }
         .glass-card:hover {
-            border-color: rgba(0, 240, 255, 0.3);
+            border-color: var(--card-hover-border);
             transform: translateY(-4px);
-            box-shadow: 0 15px 40px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1);
+            box-shadow: var(--card-hover-shadow);
         }
         .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: var(--accent-orange); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
         .user-chip {
@@ -243,9 +275,9 @@
             gap: 10px;
             padding: 0.4rem 0.9rem;
             border-radius: 999px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            background: var(--chip-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
         .user-chip-role {
             font-size: 0.8rem;
@@ -258,14 +290,14 @@
         .user-chip-name {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #f9fafb;
+            color: var(--text-main);
         }
 
         /* Profil Sidebar Premium */
         .sidebar-footer {
             padding: 1rem;
             border-top: 1px solid var(--border-color);
-            background: rgba(15, 23, 42, 0.4);
+            background: var(--footer-bg);
             margin-top: auto;
         }
         .footer-content {
@@ -273,14 +305,14 @@
             align-items: center;
             gap: 12px;
             padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--footer-content-bg);
+            border: 1px solid var(--footer-border);
             border-radius: 16px;
             transition: 0.3s;
         }
         .footer-content:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.1);
+            background: var(--footer-content-hover);
+            border-color: var(--border-color);
         }
         .user-avatar.sidebar-avatar {
             width: 42px; height: 42px;
@@ -317,17 +349,17 @@
             100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
         .user-info { flex: 1; min-width: 0; }
-        .user-name { font-size: 0.85rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .user-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
         .user-role { font-size: 0.7rem; color: var(--text-muted); display: block; }
         
         .user-actions { display: flex; gap: 8px; margin-top: 8px; }
         .action-icon { 
             width: 32px; height: 32px; 
             display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; background: rgba(255,255,255,0.05);
+            border-radius: 8px; background: var(--action-bg);
             color: var(--text-muted); transition: 0.2s; font-size: 0.8rem;
         }
-        .action-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .action-icon:hover { background: var(--action-hover-bg); color: var(--action-hover-text); }
         .action-logout:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
         .logout-form { display: none; }
 
@@ -522,16 +554,16 @@
             <li class="nav-label">Général</li>
             <li class="nav-item"><a href="{% url 'dashboard:dashboard_index' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}"><i class="fas fa-chart-pie"></i><span>Aperçu Global</span></a></li>
             <li class="nav-label">Catégories d'Incidents</li>
-            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'eau' %}" class="nav-link"><i class="fas fa-droplet color-eau"></i><span>Fuites d'Eau</span></a></li>
-            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'accident' %}" class="nav-link"><i class="fas fa-car-burst color-accident"></i><span>Accidents Route</span></a></li>
-            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'electricite' %}" class="nav-link"><i class="fas fa-bolt color-electricite"></i><span>Électricité / Circuits</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'eau' %}" class="nav-link {% if request.resolver_match.url_name == 'incident_list_category' and request.resolver_match.kwargs.category == 'eau' %}active{% endif %}"><i class="fas fa-droplet color-eau"></i><span>Fuites d'Eau</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'accident' %}" class="nav-link {% if request.resolver_match.url_name == 'incident_list_category' and request.resolver_match.kwargs.category == 'accident' %}active{% endif %}"><i class="fas fa-car-burst color-accident"></i><span>Accidents Route</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list_category' 'electricite' %}" class="nav-link {% if request.resolver_match.url_name == 'incident_list_category' and request.resolver_match.kwargs.category == 'electricite' %}active{% endif %}"><i class="fas fa-bolt color-electricite"></i><span>Électricité / Circuits</span></a></li>
             <li class="nav-label">Opérations</li>
             <li class="nav-item"><a href="{% url 'dashboard:report_incident' %}" class="nav-link {% if request.resolver_match.url_name == 'report_incident' %}active{% endif %}"><i class="fas fa-bullhorn color-other"></i><span>Signaler un Incident</span></a></li>
-            <li class="nav-item"><a href="{% url 'dashboard:incident_list' %}" class="nav-link"><i class="fas fa-list-check"></i><span>Tous les Incidents</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:incident_list' %}" class="nav-link {% if request.resolver_match.url_name == 'incident_list' %}active{% endif %}"><i class="fas fa-layer-group"></i><span>Tous les Incidents</span></a></li>
             <li class="nav-item"><a href="{% url 'dashboard:technician_list' %}" class="nav-link {% if request.resolver_match.url_name == 'technician_list' %}active{% endif %}"><i class="fas fa-users-gear"></i><span>Techniciens</span></a></li>
             <li class="nav-item"><a href="{% url 'dashboard:user_management' %}" class="nav-link {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}"><i class="fas fa-user-gear"></i><span>Gestion User</span></a></li>
             <li class="nav-label">Système</li>
-            <li class="nav-item"><a href="{% url 'dashboard:analytics_view' %}" class="nav-link"><i class="fas fa-file-waveform"></i><span>Analytiques</span></a></li>
+            <li class="nav-item"><a href="{% url 'dashboard:analytics_view' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics_view' %}active{% endif %}"><i class="fas fa-chart-line"></i><span>Analytiques</span></a></li>
         </ul>
         {% else %}
         <ul class="nav-menu">
