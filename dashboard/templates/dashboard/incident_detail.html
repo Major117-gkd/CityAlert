@@ -6,395 +6,635 @@
 
 {% block extra_css %}
 <style>
-    .detail-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
-    .status-panel { padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-top: 1.5rem; }
-    .action-btn { 
-        padding: 0.8rem 1.2rem; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; 
-        transition: 0.3s; display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+    /* ── Hero Banner ─────────────────────────────────────────────── */
+    .incident-hero {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        min-height: 160px;
+        display: flex;
+        align-items: flex-end;
+        padding: 2rem;
     }
-    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: white; }
-    .btn-outline:hover { background: rgba(255,255,255,0.05); }
-    .btn-success { background: var(--success); color: white; }
-    .btn-orange { background: var(--accent-orange); color: white; }
-    
-    .info-row { display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid var(--border-color); }
-    .info-label { color: var(--text-muted); font-size: 0.85rem; }
-    .info-value { font-weight: 500; font-size: 0.9rem; }
-    
-    #mini-map { height: 200px; border-radius: 12px; margin-top: 1rem; border: 1px solid var(--border-color); }
-
-    .detail-left { display: flex; flex-direction: column; gap: 2rem; }
-    .detail-right { display: flex; flex-direction: column; gap: 2rem; }
-    
-    .media-card { padding: 1.5rem; }
-    .media-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .media-title { font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-    .media-icon { color: var(--accent-orange); }
-    .media-status { padding: 6px 15px; border-radius: 30px; }
-    
-    .media-container { width: 100%; border-radius: 15px; overflow: hidden; position: relative; cursor: zoom-in; }
-    .media-img { width: 100%; display: block; transition: 0.5s; }
-    .media-img:hover { transform: scale(1.05); }
-    
-    .empty-media { 
-        width: 100%; height: 350px; background: rgba(255,255,255,0.02); 
-        border: 2px dashed var(--border-color); border-radius: 15px; 
-        display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); 
+    .hero-bg {
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, var(--hero-from, #0f172a) 0%, var(--hero-to, #1e293b) 100%);
+        z-index: 0;
     }
-    .empty-media i { font-size: 4rem; margin-bottom: 1rem; }
-
-    .ai-card { padding: 1.5rem; border-left: 4px solid var(--accent-orange); }
-    .ai-header { display: flex; align-items: center; gap: 15px; margin-bottom: 1rem; }
-    .ai-icon-box { width: 45px; height: 45px; border-radius: 50%; background: rgba(255, 107, 53, 0.1); display: flex; align-items: center; justify-content: center; }
-    .ai-robot-icon { color: var(--accent-orange); font-size: 1.4rem; }
-    .ai-name { font-size: 1rem; color: var(--text-main); }
-    .ai-subtitle { font-size: 0.75rem; color: var(--text-muted); }
-    .ai-diag { margin-bottom: 0.5rem; }
-    .ai-body-content { background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 10px; font-size: 0.9rem; line-height: 1.6; }
-    .diag-icon { color: var(--success); margin-right: 8px; }
-    .sev-icon { color: var(--accent-yellow); margin-right: 8px; }
-    .admin-btn-row { border: none; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
-    
-    .avatar-circle-premium {
-        position: relative; width: 100%; height: 100%; border-radius: 50%;
-        color: white; font-size: 3rem; font-weight: 800; display: flex;
-        align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        border: 3px solid rgba(255,255,255,0.2);
+    .hero-bg::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at top right, var(--hero-glow, rgba(0,240,255,0.15)), transparent 60%);
     }
-    .tech-details-title { font-size: 1rem; color: var(--text-main); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
-    .loc-value { text-align: right; max-width: 60%; }
+    .hero-bg::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-content { position: relative; z-index: 1; flex: 1; }
+    .hero-type-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 6px 14px; border-radius: 99px; font-size: 0.75rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+    .hero-title {
+        font-size: 2rem; font-weight: 900; color: white;
+        letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 0.5rem;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+    .hero-meta-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+    .hero-meta-item i { color: rgba(255,255,255,0.5); }
+    .hero-status-pill {
+        position: absolute; top: 1.5rem; right: 1.5rem; z-index: 1;
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 18px; border-radius: 99px;
+        font-weight: 700; font-size: 0.85rem;
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+    .status-pulse { width: 10px; height: 10px; border-radius: 50%; }
+    .status-pulse.pulsing { animation: heroPulse 1.5s infinite; }
+    @keyframes heroPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.3); }
+    }
 
-    .admin-card { padding: 1.5rem; background: rgba(255,255,255,0.02); }
-    .admin-title { font-size: 1rem; color: var(--text-main); margin-bottom: 1.5rem; }
-    .admin-actions-stack { display: flex; flex-direction: column; gap: 1rem; }
-    .status-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-status-intervention { border-color: #f59e0b; color: #f59e0b; }
-    .btn-status-resolve { border-color: var(--success); color: var(--success); }
-    .admin-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .tech-assign-select { width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); color: white; background: rgba(0,0,0,0.3); outline: none; }
-    .admin-btn-full { width: 100%; justify-content: center; margin-top: 0.8rem; }
-    .btn-profile-row { width: 100%; justify-content: center; margin-top: 0.8rem; border-color: rgba(255,255,255,0.2); }
-    .tech-icon-orange { color: var(--accent-orange); }
-    .tech-mission-count { color: #FBBF24; font-weight: 800; font-size: 1.2rem; }
-    .admin-bottom-actions { display: flex; gap: 10px; }
-    .btn-half { flex: 1; justify-content: center; }
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .detail-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; }
+    .detail-left, .detail-right { display: flex; flex-direction: column; gap: 1.5rem; }
 
-    /* Modal confirmed designs */
+    /* ── Shared Card ─────────────────────────────────────────────── */
+    .d-card { padding: 1.75rem; border-radius: 20px; }
+    .d-card-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.5rem; padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .d-card-title {
+        font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 1.5px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .d-card-title i { color: var(--accent-blue); }
+
+    /* ── Media Card ──────────────────────────────────────────────── */
+    .media-container {
+        width: 100%; border-radius: 16px; overflow: hidden;
+        position: relative; cursor: zoom-in;
+        border: 1px solid var(--border-color);
+    }
+    .media-img { width: 100%; display: block; transition: transform 0.5s ease; }
+    .media-img:hover { transform: scale(1.03); }
+    .media-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+        opacity: 0; transition: 0.3s;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 1rem;
+    }
+    .media-container:hover .media-overlay { opacity: 1; }
+    .media-overlay-text { color: white; font-size: 0.85rem; font-weight: 600; }
+    .empty-media {
+        width: 100%; height: 300px; background: rgba(255,255,255,0.02);
+        border: 2px dashed var(--border-color); border-radius: 16px;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; color: var(--text-muted); gap: 0.75rem;
+    }
+    .empty-media i { font-size: 3.5rem; opacity: 0.4; }
+
+    /* ── AI Analysis Card ────────────────────────────────────────── */
+    .ai-card {
+        border-left: 3px solid var(--accent-orange);
+        background: linear-gradient(135deg, rgba(255,107,53,0.05) 0%, transparent 60%);
+    }
+    .ai-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.25rem; }
+    .ai-orb {
+        width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(255,107,53,0.2), rgba(255,51,102,0.1));
+        display: flex; align-items: center; justify-content: center;
+        color: var(--accent-orange); font-size: 1.2rem;
+        box-shadow: 0 4px 15px rgba(255,107,53,0.15);
+    }
+    .ai-title { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+    .ai-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .ai-body {
+        background: rgba(0,0,0,0.15);
+        border-radius: 12px; padding: 1.25rem;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .ai-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0.75rem; }
+    .ai-row:last-child { margin-bottom: 0; }
+    .ai-row-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .ai-row-icon.valid { background: rgba(16,185,129,0.15); color: #10b981; }
+    .ai-row-icon.sev { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .ai-row-icon.cat { background: rgba(0,240,255,0.1); color: var(--accent-blue); }
+    .ai-row-text { font-size: 0.875rem; line-height: 1.5; color: var(--text-main); }
+    .ai-row-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Info Rows ───────────────────────────────────────────────── */
+    .info-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.9rem 0; border-bottom: 1px solid var(--border-color);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-muted); font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .info-label i { width: 16px; text-align: center; color: var(--accent-blue); opacity: 0.7; }
+    .info-value { font-weight: 600; font-size: 0.88rem; color: var(--text-main); text-align: right; max-width: 55%; }
+
+    /* ── Map ─────────────────────────────────────────────────────── */
+    #mini-map {
+        height: 220px; border-radius: 14px; margin-top: 1rem;
+        border: 1px solid var(--border-color); overflow: hidden;
+    }
+
+    /* ── Admin Actions ───────────────────────────────────────────── */
+    .admin-section-label {
+        font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;
+        letter-spacing: 1px; font-weight: 700; margin-bottom: 0.65rem;
+    }
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+    .status-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 0.9rem 0.5rem; border-radius: 14px; border: 1px solid;
+        background: transparent; cursor: pointer; transition: all 0.25s;
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-btn i { font-size: 1.1rem; }
+    .status-btn:hover { transform: translateY(-2px); }
+    .btn-signale { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    .btn-signale:hover { background: rgba(239,68,68,0.1); box-shadow: 0 4px 15px rgba(239,68,68,0.15); }
+    .btn-en-cours { border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+    .btn-en-cours:hover { background: rgba(245,158,11,0.1); box-shadow: 0 4px 15px rgba(245,158,11,0.15); }
+    .btn-resolu { border-color: rgba(16,185,129,0.4); color: #10b981; }
+    .btn-resolu:hover { background: rgba(16,185,129,0.1); box-shadow: 0 4px 15px rgba(16,185,129,0.15); }
+    .status-btn.active-status { opacity: 1 !important; }
+    .btn-signale.active-status { background: rgba(239,68,68,0.15); border-color: #ef4444; }
+    .btn-en-cours.active-status { background: rgba(245,158,11,0.15); border-color: #f59e0b; }
+    .btn-resolu.active-status { background: rgba(16,185,129,0.15); border-color: #10b981; }
+
+    .admin-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    .tech-select-wrapper { position: relative; margin-bottom: 0.75rem; }
+    .tech-assign-select {
+        width: 100%; padding: 0.85rem 1rem; padding-right: 2.5rem;
+        background: var(--card-bg); color: var(--text-main);
+        border: 1px solid var(--border-color); border-radius: 12px;
+        outline: none; font-size: 0.875rem; cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: border-color 0.2s;
+    }
+    .tech-assign-select:focus { border-color: var(--accent-blue); }
+    .tech-select-arrow {
+        position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); pointer-events: none; font-size: 0.8rem;
+    }
+
+    .btn-primary-full {
+        width: 100%; padding: 0.9rem; border: none; border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent-orange), #d97706);
+        color: white; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        letter-spacing: 0.3px;
+    }
+    .btn-primary-full:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,53,0.3); }
+
+    .btn-ghost {
+        width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 12px;
+        background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.85rem;
+        cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem;
+    }
+    .btn-ghost:hover { background: var(--nav-hover-bg); border-color: var(--accent-blue); color: var(--text-main); }
+    .btn-ghost i { color: var(--accent-orange); }
+
+    .action-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn-footer-action {
+        padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 12px;
+        background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.8rem;
+        cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-footer-action:hover { background: var(--nav-hover-bg); color: var(--text-main); }
+
+    /* ── Tech Modal ──────────────────────────────────────────────── */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.8); z-index: 2000;
+        background: rgba(0,0,0,0.75); z-index: 2000;
         display: none; align-items: center; justify-content: center;
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
     }
     .modal-overlay.active { display: flex; }
     .modal-detail-content {
-        background: rgba(15, 23, 42, 0.85); 
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px;
-        padding: 3rem 2.5rem; max-width: 420px; width: 92%;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color); border-radius: 28px;
+        padding: 2.5rem 2rem; max-width: 420px; width: 92%;
         text-align: center; position: relative;
-        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05) inset;
+        box-shadow: 0 30px 60px -15px rgba(0,0,0,0.6);
+        animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .modal-detail-close {
-        position: absolute; top: 20px; right: 20px;
-        background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
-        border: 1px solid rgba(255, 255, 255, 0.1); width: 36px; height: 36px;
+        position: absolute; top: 16px; right: 16px;
+        background: rgba(255,255,255,0.05); color: var(--text-muted);
+        border: 1px solid var(--border-color); width: 34px; height: 34px;
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: all 0.3s ease;
+        cursor: pointer; transition: all 0.2s;
     }
-    .modal-detail-close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-    
-    .avatar-glow-parent { position: relative; width: 110px; height: 110px; margin: 0 auto 1.5rem; }
-    .avatar-glow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; filter: blur(25px); opacity: 0.5; border-radius: 50%; transform: translateY(10px); }
+    .modal-detail-close:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .avatar-glow-parent { position: relative; width: 100px; height: 100px; margin: 0 auto 1.25rem; }
+    .avatar-glow { position: absolute; inset: 5px; filter: blur(20px); opacity: 0.5; border-radius: 50%; }
     .avatar-circle {
         position: relative; width: 100%; height: 100%; border-radius: 50%;
-        color: white; font-size: 3rem; font-weight: 800; display: flex;
-        align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        border: 3px solid rgba(255,255,255,0.2);
+        color: white; font-size: 2.5rem; font-weight: 800; display: flex;
+        align-items: center; justify-content: center; border: 3px solid rgba(255,255,255,0.15);
     }
-    .modal-detail-name { font-size: 1.8rem; color: var(--text-main); margin-bottom: 0.4rem; font-weight: 800; letter-spacing: -0.5px; }
-    .modal-detail-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2.5rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
-    
-    .modal-stats-stack { display: flex; flex-direction: column; gap: 12px; margin-bottom: 2.5rem; }
+    .modal-detail-name { font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; }
+    .modal-detail-subtitle { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2rem; }
+    .modal-stats-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; text-align: left; }
     .stat-row-premium {
-        padding: 1.2rem; display: flex; align-items: center; justify-content: space-between; text-align: left;
-        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
-        transition: transform 0.2s; cursor: default;
+        padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px; transition: transform 0.2s;
     }
-    .stat-row-premium:hover { transform: scale(1.02); }
-    .stat-main-group { display: flex; align-items: center; gap: 15px; }
+    .stat-row-premium:hover { transform: scale(1.01); }
+    .stat-main-group { display: flex; align-items: center; gap: 12px; }
     .stat-icon-square {
-        width: 42px; height: 42px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        width: 38px; height: 38px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
     }
-    .stat-icon-square.blue { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
-    .stat-icon-square.green { background: rgba(16, 185, 129, 0.15); color: #34D399; }
-    .stat-icon-square.orange { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
-    
-    .stat-label-premium { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 3px; }
-    .stat-value-premium { color: var(--text-main); font-weight: 700; font-size: 1.05rem; }
-    .availability-dot { display: flex; width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 4px rgba(255,255,255,0.8); }
-    .availability-dot.online { background: #10B981; box-shadow: 0 0 12px #10B981; }
-    .availability-dot.offline { background: #EF4444; box-shadow: 0 0 12px #EF4444; }
-    
+    .stat-icon-square.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .stat-icon-square.green { background: rgba(16,185,129,0.15); color: #34d399; }
+    .stat-icon-square.orange { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .stat-label-premium { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .stat-value-premium { color: var(--text-main); font-weight: 700; font-size: 0.95rem; margin-top: 2px; }
+    .availability-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .availability-dot.online { background: #10b981; box-shadow: 0 0 10px #10b981; }
+    .availability-dot.offline { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
     .btn-modal-footer {
-        width: 100%; justify-content: center; padding: 1.1rem; font-size: 1.05rem; font-weight: 700;
-        border-radius: 14px; background: rgba(255,255,255,0.08); color: white;
-        border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; cursor: pointer;
-        display: flex; align-items: center; gap: 10px;
+        width: 100%; padding: 1rem; border-radius: 12px;
+        background: rgba(255,255,255,0.06); color: var(--text-main);
+        border: 1px solid var(--border-color); font-weight: 600; cursor: pointer;
+        transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-modal-footer:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
-
-    .badge-signalé { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-    .badge-encours { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
-    .badge-résolu { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .btn-modal-footer:hover { background: rgba(255,255,255,0.1); }
 
     @media (max-width: 1024px) {
         .detail-grid { grid-template-columns: 1fr; }
+        .status-grid { grid-template-columns: 1fr 1fr 1fr; }
     }
+    /* ── Hero category themes ───────────────────────────────────── */
+    .incident-hero.cat-eau   { --hero-from:#0a1628; --hero-to:#0c2040; --hero-glow:rgba(0,180,255,0.2); }
+    .incident-hero.cat-accident { --hero-from:#1a0a0a; --hero-to:#2d0f0f; --hero-glow:rgba(255,50,50,0.2); }
+    .incident-hero.cat-elec  { --hero-from:#1a1500; --hero-to:#2a2000; --hero-glow:rgba(255,200,0,0.2); }
+    .incident-hero.cat-other { --hero-from:#0f172a; --hero-to:#1e293b; --hero-glow:rgba(0,240,255,0.15); }
+    /* ── Status pill colours ─────────────────────────────────────── */
+    .pill-signale  { background:rgba(239,68,68,0.2);  color:#ef4444; }
+    .pill-encours  { background:rgba(245,158,11,0.2); color:#f59e0b; }
+    .pill-resolu   { background:rgba(16,185,129,0.2); color:#10b981; }
+    .pulse-signale { background:#ef4444; }
+    .pulse-encours { background:#f59e0b; }
+    .pulse-resolu  { background:#10b981; }
+    /* ── Hero type badge colours ─────────────────────────────────── */
+    .badge-cat-eau   { background:rgba(0,180,255,0.15); color:#38bdf8; border:1px solid rgba(0,180,255,0.2); }
+    .badge-cat-accident { background:rgba(255,50,50,0.15); color:#f87171; border:1px solid rgba(255,50,50,0.2); }
+    .badge-cat-elec  { background:rgba(255,200,0,0.15); color:#fbbf24; border:1px solid rgba(255,200,0,0.2); }
+    .badge-cat-other { background:rgba(0,240,255,0.1); color:var(--accent-blue); border:1px solid rgba(0,240,255,0.15); }
+    /* ── Severity text colours ───────────────────────────────────── */
+    .sev-elevee  { color:#ef4444; }
+    .sev-moyenne { color:#f59e0b; }
+    .sev-other   { color:#10b981; }
+    /* ── Info value helpers ──────────────────────────────────────── */
+    .info-value-id    { font-family:monospace; color:var(--accent-blue); }
+    .info-value-email { font-size:0.8rem; }
+    .info-value-tech  { color:var(--accent-orange); }
+    /* ── Fullscreen link override ────────────────────────────────── */
+    .btn-ghost-sm { width:auto; padding:0.4rem 0.9rem; margin:0; font-size:0.78rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="detail-grid">
-    <!-- Colonne Gauche: Médias et Analyse -->
-    <div class="detail-left">
-        <!-- Carte Principale: Image -->
-        <div class="glass-card media-card">
-            <div class="media-header">
-                <h3 class="media-title"><i class="fas fa-camera media-icon"></i> Preuve Visuelle</h3>
-                <span class="badge badge-{{ incident.status|lower|cut:' ' }} media-status">{{ incident.status }}</span>
-            </div>
-            
-            {% if incident.image %}
-                <div class="media-container" onclick="window.open('{{ incident.image.url }}')">
-                    <img src="{{ incident.image.url }}" class="media-img" alt="Preuve visuelle de l'incident">
-                </div>
-            {% else %}
-                <div class="empty-media">
-                    <i class="fas fa-image"></i>
-                    <p>Aucun média attaché</p>
-                </div>
-            {% endif %}
-        </div>
 
-        <!-- Analyse IA Détaillée -->
-        <div class="glass-card ai-card">
-            <div class="ai-header">
-                <div class="ai-icon-box">
-                    <i class="fas fa-robot ai-robot-icon"></i>
-                </div>
-                <div>
-                    <h3 class="ai-name">Intelligence Artificielle</h3>
-                    <p class="ai-subtitle">Analyse prédictive et validation vision</p>
-                </div>
-            </div>
-            <div class="ai-body-content">
-                <p class="ai-diag"><i class="fas fa-check-circle diag-icon"></i> <strong>Diagnostic :</strong> {{ incident.category }} confirmé à 98%.</p>
-                <p class="ai-sev"><i class="fas fa-triangle-exclamation sev-icon"></i> <strong>Sévérité suggérée :</strong> {{ incident.severity }}</p>
-            </div>
-        </div>
+{# ── Hero ─────────────────────────────────────────────────────────── #}
+<div class="incident-hero glass-card
+    {% if incident.category == 'Eau' %}cat-eau
+    {% elif incident.category == 'Accident' %}cat-accident
+    {% elif incident.category == 'Electricité' %}cat-elec
+    {% else %}cat-other{% endif %}
+">
+    <div class="hero-bg"></div>
+
+    {# Status pill #}
+    <div class="hero-status-pill
+        {% if incident.status == 'Signalé' %}pill-signale
+        {% elif incident.status == 'En cours' %}pill-encours
+        {% else %}pill-resolu{% endif %}
+    ">
+        <span class="status-pulse {% if incident.status != 'Résolu' %}pulsing{% endif %}
+            {% if incident.status == 'Signalé' %}pulse-signale
+            {% elif incident.status == 'En cours' %}pulse-encours
+            {% else %}pulse-resolu{% endif %}
+        "></span>
+        {{ incident.status }}
     </div>
 
-    <!-- Colonne Droite: Actions et Contexte -->
-    <div class="detail-right">
-        <!-- Résumé Global -->
-        <div class="glass-card tech-details-card">
-            <h3 class="tech-details-title">Détails Techniques</h3>
-            
-            <div class="info-row">
-                <span class="info-label">ID Système</span>
-                <span class="info-value">#{{ incident.id }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Signalé par</span>
-                <span class="info-value">{{ incident.user_name }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Contact</span>
-                <span class="info-value">{{ incident.user_email|default:"Non fourni" }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Localisation</span>
-                <span class="info-value loc-value">{{ incident.address }}</span>
-            </div>
-            
-            <div id="mini-map"></div>
+    <div class="hero-content">
+        <div class="hero-type-badge
+            {% if incident.category == 'Eau' %}badge-cat-eau
+            {% elif incident.category == 'Accident' %}badge-cat-accident
+            {% elif incident.category == 'Electricité' %}badge-cat-elec
+            {% else %}badge-cat-other{% endif %}
+        ">
+            <i class="fas {% if incident.category == 'Eau' %}fa-droplet{% elif incident.category == 'Accident' %}fa-car-burst{% elif incident.category == 'Electricité' %}fa-bolt{% else %}fa-circle-exclamation{% endif %}"></i>
+            {{ incident.category }}
         </div>
-
-        <!-- Panneau d'Actions Professionnelles -->
-        <div class="glass-card admin-card">
-            <h3 class="admin-title">Actions Administratives</h3>
-            
-            <div class="admin-actions-stack">
-                <!-- Changement de statut -->
-                <div>
-                    <label class="admin-label">Modifier le Statut</label>
-                    <div class="status-actions">
-                        <button onclick="updateStatus('En cours')" class="action-btn btn-outline btn-status-intervention" title="Mettre en cours d'intervention">
-                            <i class="fas fa-spinner"></i> Intervention
-                        </button>
-                        <button onclick="updateStatus('Résolu')" class="action-btn btn-outline btn-status-resolve" title="Clôturer l'incident">
-                            <i class="fas fa-check"></i> Clôturer
-                        </button>
-                    </div>
-                </div>
-
-                <hr class="admin-divider">
-
-                <!-- Assignation -->
-                <div>
-                    <label class="admin-label">Assigner une Équipe</label>
-                    <select id="techSelect" class="glass-card tech-assign-select" title="Choisir un technicien pour l'intervention">
-                        <option value="">-- Choisir un technicien --</option>
-                        {% for tech in technicians %}
-                            <option value="{{ tech.id }}" {% if incident.assigned_technician.id == tech.id %}selected{% endif %}>
-                                {{ tech.name }} ({{ tech.category }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <button onclick="assignTechnician()" class="action-btn btn-orange admin-btn-full" title="Confirmer l'assignation de l'équipe">
-                        Confirmer l'assignation
-                    </button>
-                    {% if incident.assigned_technician %}
-                    <button onclick="openTechModal()" class="action-btn btn-outline btn-profile-row" title="Voir le profil de l'équipe assignée">
-                        <i class="fas fa-id-card tech-icon-orange"></i> Profil de l'équipe
-                    </button>
-                    {% endif %}
-                </div>
-
-                <hr class="admin-divider">
-
-                <!-- Autres actions -->
-                <div class="admin-bottom-actions">
-                    <button onclick="window.print()" class="action-btn btn-outline btn-half" title="Imprimer les détails">
-                        <i class="fas fa-print"></i> Imprimer
-                    </button>
-                    <button onclick="showNotification('Info', 'Rapport généré et envoyé')" class="action-btn btn-outline btn-half" title="Générer un rapport PDF">
-                        <i class="fas fa-file-pdf"></i> Rapport
-                    </button>
-                </div>
-            </div>
+        <h1 class="hero-title">Incident #{{ incident.id }}</h1>
+        <div class="hero-meta">
+            <span class="hero-meta-item"><i class="fas fa-map-pin"></i> {{ incident.address|default:"Localisation inconnue" }}</span>
+            <span class="hero-meta-item"><i class="fas fa-clock"></i> {{ incident.timestamp|date:"d M Y à H:i" }}</span>
+            <span class="hero-meta-item"><i class="fas fa-user"></i> {{ incident.user_name|default:"Anonyme" }}</span>
+            <span class="hero-meta-item">
+                <i class="fas fa-triangle-exclamation"></i>
+                Sévérité :
+                <strong class="{% if incident.severity == 'Élevée' %}sev-elevee{% elif incident.severity == 'Moyenne' %}sev-moyenne{% else %}sev-other{% endif %}">{{ incident.severity|default:"Inconnue" }}</strong>
+            </span>
         </div>
     </div>
 </div>
 
+{# ── Main Grid ────────────────────────────────────────────────────── #}
+<div class="detail-grid">
+
+    {# LEFT COLUMN #}
+    <div class="detail-left">
+
+        {# Image / Preuve #}
+        <div class="glass-card d-card">
+            <div class="d-card-header">
+                <span class="d-card-title"><i class="fas fa-camera"></i> Preuve Visuelle</span>
+                {% if incident.image %}
+                <a href="{{ incident.image.url }}" target="_blank" class="btn-ghost btn-ghost-sm">
+                    <i class="fas fa-expand"></i> Plein écran
+                </a>
+                {% endif %}
+            </div>
+            {% if incident.image %}
+                <div class="media-container" onclick="window.open('{{ incident.image.url }}')">
+                    <img src="{{ incident.image.url }}" class="media-img" alt="Preuve visuelle de l'incident">
+                    <div class="media-overlay">
+                        <span class="media-overlay-text"><i class="fas fa-search-plus"></i> Agrandir</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-media">
+                    <i class="fas fa-image"></i>
+                    <p>Aucun média attaché à cet incident</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Analyse IA #}
+        <div class="glass-card d-card ai-card">
+            <div class="ai-header">
+                <div class="ai-orb"><i class="fas fa-robot"></i></div>
+                <div>
+                    <div class="ai-title">Analyse par Intelligence Artificielle</div>
+                    <div class="ai-subtitle">Gemini Vision · Résultat de l'analyse prédictive</div>
+                </div>
+            </div>
+            <div class="ai-body">
+                <div class="ai-row">
+                    <div class="ai-row-icon valid"><i class="fas fa-check-double"></i></div>
+                    <div>
+                        <div class="ai-row-label">Diagnostic</div>
+                        <div class="ai-row-text">{{ incident.description|default:"Incident validé et enregistré dans le système CityAlert." }}</div>
+                    </div>
+                </div>
+                <div class="ai-row">
+                    <div class="ai-row-icon cat"><i class="fas fa-tag"></i></div>
+                    <div>
+                        <div class="ai-row-label">Catégorie détectée</div>
+                        <div class="ai-row-text"><strong>{{ incident.category }}</strong></div>
+                    </div>
+                </div>
+                <div class="ai-row">
+                    <div class="ai-row-icon sev"><i class="fas fa-gauge-high"></i></div>
+                    <div>
+                        <div class="ai-row-label">Sévérité estimée</div>
+                        <div class="ai-row-text"><strong>{{ incident.severity|default:"Non évaluée" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {# RIGHT COLUMN #}
+    <div class="detail-right">
+
+        {# Détails Techniques #}
+        <div class="glass-card d-card">
+            <div class="d-card-header">
+                <span class="d-card-title"><i class="fas fa-clipboard-list"></i> Détails Techniques</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-hashtag"></i> ID Système</span>
+                <span class="info-value info-value-id">#{{ incident.id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-user"></i> Signalé par</span>
+                <span class="info-value">{{ incident.user_name|default:"Anonyme" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-envelope"></i> Contact</span>
+                <span class="info-value info-value-email">{{ incident.user_email|default:"Non fourni" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-calendar"></i> Date</span>
+                <span class="info-value">{{ incident.timestamp|date:"d/m/Y à H:i" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-tag"></i> Catégorie</span>
+                <span class="info-value">{{ incident.category }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-map-marker-alt"></i> Adresse</span>
+                <span class="info-value">{{ incident.address|default:"Non renseignée" }}</span>
+            </div>
+            {% if incident.assigned_technician %}
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-hard-hat"></i> Équipe assignée</span>
+                <span class="info-value info-value-tech">{{ incident.assigned_technician.name }}</span>
+            </div>
+            {% endif %}
+
+            {# Mini-carte #}
+            <div id="mini-map"></div>
+        </div>
+
+        {# Actions Admin #}
+        {% if user.is_staff %}
+        <div class="glass-card d-card">
+            <div class="d-card-header">
+                <span class="d-card-title"><i class="fas fa-sliders"></i> Actions Administratives</span>
+            </div>
+
+            {# Statut #}
+            <p class="admin-section-label">Modifier le Statut</p>
+            <div class="status-grid">
+                <button onclick="updateStatus('Signalé')" class="status-btn btn-signale {% if incident.status == 'Signalé' %}active-status{% endif %}" title="Marquer comme Signalé">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Signalé
+                </button>
+                <button onclick="updateStatus('En cours')" class="status-btn btn-en-cours {% if incident.status == 'En cours' %}active-status{% endif %}" title="Passer en Intervention">
+                    <i class="fas fa-spinner"></i>
+                    En cours
+                </button>
+                <button onclick="updateStatus('Résolu')" class="status-btn btn-resolu {% if incident.status == 'Résolu' %}active-status{% endif %}" title="Clôturer l'incident">
+                    <i class="fas fa-check-circle"></i>
+                    Résolu
+                </button>
+            </div>
+
+            <hr class="admin-divider">
+
+            {# Assignation #}
+            <p class="admin-section-label">Assigner une Équipe</p>
+            <div class="tech-select-wrapper">
+                <select id="techSelect" class="tech-assign-select" title="Choisir un technicien">
+                    <option value="">— Choisir une équipe —</option>
+                    {% for tech in technicians %}
+                        <option value="{{ tech.id }}" {% if incident.assigned_technician.id == tech.id %}selected{% endif %}>
+                            {{ tech.name }} · {{ tech.category }} · {{ tech.status }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <i class="fas fa-chevron-down tech-select-arrow"></i>
+            </div>
+            <button onclick="assignTechnician()" class="btn-primary-full">
+                <i class="fas fa-user-check"></i> Confirmer l'assignation
+            </button>
+            {% if incident.assigned_technician %}
+            <button onclick="openTechModal()" class="btn-ghost">
+                <i class="fas fa-id-card"></i> Voir le profil de l'équipe
+            </button>
+            {% endif %}
+
+            <hr class="admin-divider">
+
+            {# Footer actions #}
+            <div class="action-footer">
+                <button onclick="window.print()" class="btn-footer-action" title="Imprimer">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button onclick="showNotification('Info', 'Export en cours...')" class="btn-footer-action" title="Exporter">
+                    <i class="fas fa-file-export"></i> Exporter
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{# ── Tech Modal ───────────────────────────────────────────────────── #}
 {% if incident.assigned_technician %}
-<!-- Modale Profil Technicien Premium -->
 <div id="techModal" class="modal-overlay">
     <div class="modal-detail-content">
-        
-        <!-- Premium Close Button -->
         <button onclick="closeTechModal()" class="modal-detail-close" title="Fermer" aria-label="Fermer">
             <i class="fas fa-times"></i>
         </button>
-        
+
         <div class="avatar-glow-parent">
             <div class="avatar-glow" id="avatarGlow"></div>
-            <div class="avatar-circle-premium" id="avatarCircle">
+            <div class="avatar-circle" id="avatarCircle">
                 {{ incident.assigned_technician.name|first|upper }}
             </div>
         </div>
-        
+
         <h2 class="modal-detail-name">{{ incident.assigned_technician.name }}</h2>
-        <p class="modal-detail-subtitle">Équipe d'Intervention</p>
-        
+        <p class="modal-detail-subtitle">Équipe d'Intervention · {{ incident.assigned_technician.specialty }}</p>
+
         <div class="modal-stats-stack">
-            <!-- Statut -->
             <div class="stat-row-premium">
                 <div class="stat-main-group">
-                    <div class="stat-icon-square blue">
-                        <i class="fas fa-satellite-dish"></i>
-                    </div>
+                    <div class="stat-icon-square blue"><i class="fas fa-satellite-dish"></i></div>
                     <div>
                         <div class="stat-label-premium">Disponibilité</div>
                         <div class="stat-value-premium">{{ incident.assigned_technician.status }}</div>
                     </div>
                 </div>
-                {% if incident.assigned_technician.status == 'Libre' %}
-                <span class="availability-dot online"></span>
-                {% else %}
-                <span class="availability-dot offline"></span>
-                {% endif %}
+                <span class="availability-dot {% if incident.assigned_technician.status == 'Libre' %}online{% else %}offline{% endif %}"></span>
             </div>
-            
-            <!-- Contact -->
             <div class="stat-row-premium">
                 <div class="stat-main-group">
-                    <div class="stat-icon-square green">
-                        <i class="fas fa-phone-alt"></i>
-                    </div>
+                    <div class="stat-icon-square green"><i class="fas fa-phone-alt"></i></div>
                     <div>
-                        <div class="stat-label-premium">Contact Direct</div>
-                        <div class="stat-value-premium">{{ incident.assigned_technician.phone|default:'+33 7 12 99 00 56' }}</div>
+                        <div class="stat-label-premium">Contact</div>
+                        <div class="stat-value-premium">{{ incident.assigned_technician.phone|default:"Non renseigné" }}</div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Missions -->
             <div class="stat-row-premium">
                 <div class="stat-main-group">
-                    <div class="stat-icon-square orange">
-                        <i class="fas fa-medal"></i>
-                    </div>
+                    <div class="stat-icon-square orange"><i class="fas fa-medal"></i></div>
                     <div>
                         <div class="stat-label-premium">Expérience</div>
-                        <div class="stat-value-premium">
-                            <span class="tech-mission-count">{{ incident.assigned_technician.missions_completed|default:'42' }}</span> interventions réussies
-                        </div>
+                        <div class="stat-value-premium">{{ incident.assigned_technician.missions_completed }} interventions</div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <button onclick="closeTechModal()" class="btn-modal-footer" title="Fermer" aria-label="Fermer">
-            Fermer le Profil
+
+        <button onclick="closeTechModal()" class="btn-modal-footer">
+            <i class="fas fa-times"></i> Fermer le profil
         </button>
     </div>
 </div>
 {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Données d'initialisation de la carte
+    // Init mini-map
     const latStr = "{{ incident.latitude|default:'' }}";
     const lngStr = "{{ incident.longitude|default:'' }}";
-    const mapCoords = {
-        lat: latStr ? parseFloat(latStr.replace(',', '.')) : null,
-        lng: lngStr ? parseFloat(lngStr.replace(',', '.')) : null
-    };
 
     document.addEventListener('DOMContentLoaded', function() {
-        if (mapCoords.lat && mapCoords.lng) {
-            var miniMap = L.map('mini-map', { 
-                zoomControl: false, 
-                dragging: false, 
-                touchZoom: false, 
-                scrollWheelZoom: false 
-            }).setView([mapCoords.lat, mapCoords.lng], 15);
+        if (latStr && lngStr) {
+            const lat = parseFloat(latStr.replace(',', '.'));
+            const lng = parseFloat(lngStr.replace(',', '.'));
+            const miniMap = L.map('mini-map', { zoomControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false })
+                             .setView([lat, lng], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(miniMap);
-            L.marker([mapCoords.lat, mapCoords.lng]).addTo(miniMap);
+            const customIcon = L.divIcon({
+                html: `<div style="width:32px;height:32px;border-radius:50%;background:var(--accent-orange);border:3px solid white;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;box-shadow:0 4px 15px rgba(0,0,0,0.4)"><i class="fas fa-location-dot"></i></div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+            L.marker([lat, lng], { icon: customIcon }).addTo(miniMap);
+        } else {
+            document.getElementById('mini-map').style.display = 'none';
         }
     });
 
     async function updateStatus(newStatus) {
         try {
-            const response = await fetch("{% url 'dashboard:update_incident' incident.id %}", {
+            const resp = await fetch("{% url 'dashboard:update_incident' incident.id %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify({ status: newStatus })
             });
-            const data = await response.json();
-            if(data.status === 'success') {
+            const data = await resp.json();
+            if (data.status === 'success') {
                 showNotification('Succès', 'Statut mis à jour : ' + newStatus, 'success');
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 1200);
             }
         } catch (e) {
             showNotification('Erreur', 'Impossible de mettre à jour le statut', 'error');
@@ -403,32 +643,29 @@
 
     async function assignTechnician() {
         const techId = document.getElementById('techSelect').value;
-        if(!techId) return;
-
+        if (!techId) { showNotification('Attention', 'Veuillez sélectionner une équipe', 'error'); return; }
         try {
-            const response = await fetch("{% url 'dashboard:update_incident' incident.id %}", {
+            const resp = await fetch("{% url 'dashboard:update_incident' incident.id %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify({ assigned_technician_id: techId })
             });
-            const data = await response.json();
-            if(data.status === 'success') {
-                showNotification('Succès', 'Technicien assigné avec succès', 'success');
-                setTimeout(() => location.reload(), 1500);
+            const data = await resp.json();
+            if (data.status === 'success') {
+                showNotification('Succès', 'Équipe assignée avec succès !', 'success');
+                setTimeout(() => location.reload(), 1200);
             }
         } catch (e) {
-            showNotification('Erreur', 'Échec de l\'assignation', 'error');
+            showNotification('Erreur', "Échec de l'assignation", 'error');
         }
     }
 
     function openTechModal() {
+        const color = "{{ incident.assigned_technician.avatar_color|default:'var(--accent-orange)' }}";
         const glow = document.getElementById('avatarGlow');
         const circle = document.getElementById('avatarCircle');
-        if (glow) glow.style.background = "{{ incident.assigned_technician.avatar_color|default:'var(--accent-orange)' }}";
-        if (circle) circle.style.background = "linear-gradient(135deg, {{ incident.assigned_technician.avatar_color|default:'var(--accent-orange)' }}, #D97706)";
+        if (glow) glow.style.background = color;
+        if (circle) circle.style.background = `linear-gradient(135deg, ${color}, #d97706)`;
         document.getElementById('techModal').classList.add('active');
     }
     function closeTechModal() {

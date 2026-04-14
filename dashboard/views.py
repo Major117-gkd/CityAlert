@@ -94,15 +94,42 @@ def get_gemini_session():
     """Crée une session requests avec une stratégie de retentative robuste."""
     session = requests.Session()
     retry_strategy = Retry(
-        total=3,
+        total=2,
         backoff_factor=1,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[500, 502, 503, 504],
         allowed_methods=["POST"]
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     return session
+
+def get_local_assistant_response(message):
+    """Fournit une réponse basée sur des mots-clés si l'IA est indisponible."""
+    msg = message.lower()
+    
+    knowledge_base = [
+        (['comment', 'fonctionne', 'marche', 'quoi', 'c\'est quoi'], 
+         "CityAlert est une plateforme de gestion urbaine. Vous pouvez signaler des incidents (fuites d'eau, accidents, pannes électriques) en cliquant sur 'Signaler un incident'. Une IA analyse votre photo pour catégoriser le problème, puis un technicien est alerté."),
+        
+        (['catégorie', 'type', 'incident'], 
+         "Nous gérons actuellement trois catégories majeures : 1. Fuites d'Eau (canalisations, inondations), 2. Accidents de la Route (collisions, obstacles), 3. Électricité (courts-circuits, câbles tombés)."),
+        
+        (['technicien', 'ouvrier', 'réparation'], 
+         "Dès qu'un incident est validé, notre système recherche le technicien le plus proche géographiquement pour intervenir rapidement. Vous pouvez suivre l'état de vos signalements dans 'Mes Incidents'."),
+        
+        (['profil', 'mon compte', 'modifier'], 
+         "Vous pouvez modifier vos informations personnelles et votre email dans la section 'Profil' accessible via le menu latéral."),
+        
+        (['bonjour', 'salut', 'hello'], 
+         "Bonjour ! Je suis l'assistant CityAlert. Je peux vous aider à naviguer sur la plateforme ou répondre à vos questions sur les incidents urbains."),
+    ]
+    
+    for keywords, response in knowledge_base:
+        if any(kw in msg for kw in keywords):
+            return response
+            
+    return None
 
 @login_required
 @csrf_exempt
@@ -111,6 +138,7 @@ def chat_with_gemini(request):
         try:
             data = json.loads(request.body)
             user_message = data.get('message', '')
+            history = data.get('history', []) # Liste de messages précédents
             
             if not user_message:
                 return JsonResponse({'error': 'Message is required'}, status=400)
@@ -125,42 +153,73 @@ def chat_with_gemini(request):
             if not gemini_api_key:
                 # Simulation en l'absence de clé API Gemini
                 return JsonResponse({
-                    'response': f"[Simulation] Pas de clé Gemini configurée. Vous avez demandé : \"{user_message}\".\nPour une vraie réponse IA, définissez GEMINI_API_KEY dans vos variables d'environnement ou dans settings.py."
+                    'response': f"[Simulation] Pas de clé Gemini configurée. Vous avez demandé : \"{user_message}\".\nPour une vraie réponse IA, définissez GEMINI_API_KEY dans vos variables d'environnement."
                 })
 
-            # Using the latest Gemini 2.0 Flash model (v1beta via Google AI Studio)
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
+            # Construction du payload avec historique et instruction système
+            # On limite l'historique aux 10 derniers messages pour éviter de saturer le contexte
+            formatted_history = []
+            for h in history[-10:]:
+                formatted_history.append({
+                    "role": h.get('role', 'user'),
+                    "parts": [{"text": h.get('text', '')}]
+                })
             
+            # Ajouter le message actuel de l'utilisateur
+            formatted_history.append({
+                "role": "user",
+                "parts": [{"text": user_message}]
+            })
+
             payload = {
-                "contents": [{
+                "system_instruction": {
                     "parts": [{
-                        "text": f"""Tu es un assistant IA spécialisé dans l'aide aux utilisateurs du système CityAlert (anciennement WaterAlert), un système de monitoring multi-incidents.
-Contexte: Le système gère maintenant les fuites d'eau, les accidents de la route et les courts-circuits électriques.
-L'utilisateur te pose cette question : {user_message}
-Réponds de manière utile, concise et en français."""
+                        "text": """Tu es un assistant IA d'élite nommé 'Assistant CityAlert'.
+Ton rôle est d'aider les utilisateurs et les administrateurs du système CityAlert.
+Tu connais parfaitement la plateforme:
+- Elle gère 3 catégories d'incidents: EAU (fuites), ACCIDENTS (route), ÉLECTRICITÉ (pannes).
+- Elle utilise une IA pour analyser les photos d'incidents.
+- Elle permet aux administrateurs de gérer les techniciens et de voir des analyses.
+- Elle priorise la sécurité et la rapidité d'intervention.
+
+Sois professionnel, courtois, et concis dans tes réponses. Réponds toujours en français."""
                     }]
-                }]
+                },
+                "contents": formatted_history
             }
-            
+
+            models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
             headers = {'Content-Type': 'application/json'}
             session = get_gemini_session()
-            response = session.post(url, json=payload, headers=headers, timeout=60)
             
-            if response.status_code == 429:
-                return JsonResponse({'response': "Le service Gemini est saturé. [Mode Secours] Je peux répondre à vos questions générales sur les incidents en attendant. Que souhaitez-vous savoir ?"})
-
-            if response.status_code == 200:
-                result = response.json()
+            for model_name in models_to_try:
+                url = f'https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_api_key}'
+                
                 try:
-                    bot_response = result['candidates'][0]['content']['parts'][0]['text']
-                    return JsonResponse({'response': bot_response})
-                except (KeyError, IndexError):
-                    return JsonResponse({'response': f"Réponse inattendue de l'IA: {json.dumps(result)}"})
-            
-            # Gestion spécifique des erreurs API
-            error_data = response.json() if response.headers.get('Content-Type') == 'application/json' else {'error': {'message': response.text}}
-            error_msg = error_data.get('error', {}).get('message', 'Erreur inconnue')
-            return JsonResponse({'response': f"Erreur API Gemini ({response.status_code}) : {error_msg}"})
+                    response = session.post(url, json=payload, headers=headers, timeout=60)
+                    
+                    if response.status_code == 429:
+                        continue # Tentative avec le prochain modèle
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        bot_response = result['candidates'][0]['content']['parts'][0]['text']
+                        return JsonResponse({'response': bot_response})
+                    
+                    print(f"Error with {model_name}: {response.text}")
+                    
+                except Exception as e:
+                    print(f"Connection error with {model_name}: {e}")
+                    continue
+
+            # Fallback final : Cerveau Local
+            local_response = get_local_assistant_response(user_message)
+            if local_response:
+                return JsonResponse({'response': f"[Mode Secours] {local_response}"})
+
+            return JsonResponse({
+                'response': "Désolé, mes services d'intelligence artificielle sont actuellement très sollicités. [Mode Secours] Je reste disponible pour vous aider manuellement sur la plateforme. Que puis-je faire pour vous ?"
+            })
         except Exception as e:
             return JsonResponse({'response': f"Erreur système: {str(e)}"})
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -1046,7 +1105,7 @@ def transcribe_audio(request):
                 "contents": [{
                     "parts": [
                         {"text": "Transcris cet audio en texte français. Réponds uniquement avec la transcription, sans aucun autre texte."},
-                        {"inline_data": {"mime_type": "audio/wav", "data": audio_data}}
+                        {"inlineData": {"mimeType": "audio/wav", "data": audio_data}}
                     ]
                 }]
             }
@@ -1078,8 +1137,11 @@ def transcribe_audio(request):
 def _analyze_image_gemini(image_file):
     """Analyse une image via Gemini et retourne un dict de résultats."""
     import base64
+    import io
+    from PIL import Image
     from django.conf import settings
 
+    mime_type = "image/jpeg"
     # Encode l'image en base64 pour l'API Gemini avec COMPRESSION PRÉALABLE
     # Réduit la taille pour éviter l'erreur ConnectionAbortedError (10053) sur Windows
     try:
@@ -1098,24 +1160,18 @@ def _analyze_image_gemini(image_file):
         img.save(buffer, format="JPEG", quality=75)
         image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
+        print(f"Image compression error: {e}")
         # En cas d'erreur de compression, on tente la lecture brute par sécurité
         image_file.seek(0)
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
+        # On récupère le vrai mime_type du fichier en secours
+        mime_type = getattr(image_file, 'content_type', 'image/jpeg')
     
     image_file.seek(0)
 
     gemini_api_key = getattr(settings, 'GEMINI_API_KEY', None)
     if not gemini_api_key:
-        # Mode simulation si la clé n'est pas configurée
-        return {
-            'status': 'success',
-            'is_valid': True,
-            'detected_category': 'Eau',
-            'ai_comment': "Simulation : Fuite d'eau détectée. Clé API manquante.",
-            'suggested_severity': 'Moyenne'
-        }
-
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
+        return {'status': 'error', 'message': 'Configuration IA incomplète (Clé API absente).'}
 
     prompt = f"""
     Tu es un modèle de vision IA qui analyse des photos d'incidents urbains.
@@ -1135,39 +1191,55 @@ def _analyze_image_gemini(image_file):
         "contents": [{
             "parts": [
                 {"text": prompt},
-                {"inline_data": {"mime_type": "image/jpeg", "data": image_data}}
+                {"inlineData": {"mimeType": mime_type, "data": image_data}}
             ]
         }]
     }
 
-    response = requests.post(url, json=payload, timeout=30)
+    models_to_try = [
+        "gemini-2.0-flash",
+        "gemini-1.5-flash"
+    ]
 
-    if response.status_code == 429:
-        return {
-            'status': 'success',
-            'is_valid': True,
-            'detected_category': 'Eau',
-            'ai_comment': "Note : Le service Gemini est saturé, une analyse de secours a été effectuée. Fuite d'eau probable détectée.",
-            'suggested_severity': 'Moyenne'
-        }
-
-    if response.status_code != 200:
-        return {'status': 'error', 'message': f'Erreur API Gemini ({response.status_code})'}
-
-    result = response.json()
-    try:
-        content = result['candidates'][0]['content']['parts'][0]['text']
-        # Nettoyage des blocs de code Markdown si l'IA en a ajouté
-        if content.startswith('```json'):
-            content = content.replace('```json', '', 1).replace('```', '', 1).strip()
-        elif content.startswith('```'):
-            content = content.replace('```', '', 2).strip()
+    last_error_msg = "Le service d'analyse IA est actuellement saturé."
+    
+    for model_name in models_to_try:
+        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_api_key}'
+        
+        try:
+            response = requests.post(url, json=payload, timeout=30)
             
-        data = json.loads(content)
-        data['status'] = 'success'
-        return data
-    except Exception as e:
-        return {'status': 'error', 'message': f'Réponse inattendue de Gemini: {str(e)}'}
+            if response.status_code == 429:
+                last_error_msg = f"Quota atteint pour {model_name}. Tentative avec le modèle suivant..."
+                continue # Essayer le prochain modèle
+            
+            if response.status_code != 200:
+                print(f"Gemini API Error ({model_name}): {response.text}")
+                return {'status': 'error', 'message': f'Erreur API Gemini ({response.status_code})'}
+
+            result = response.json()
+            content = result['candidates'][0]['content']['parts'][0]['text']
+            
+            # Nettoyage des blocs de code Markdown
+            if content.startswith('```json'):
+                content = content.replace('```json', '', 1).replace('```', '', 1).strip()
+            elif content.startswith('```'):
+                content = content.replace('```', '', 2).strip()
+                
+            data = json.loads(content)
+            data['status'] = 'success'
+            data['model_used'] = model_name
+            return data
+            
+        except Exception as e:
+            print(f"Error calling {model_name}: {e}")
+            continue
+
+    # Si on arrive ici, tous les modèles ont échoué
+    return {
+        'status': 'error',
+        'message': "Le service d'analyse IA est saturé sur tous les modèles disponibles. Veuillez remplir le formulaire manuellement."
+    }
 
 
 @csrf_exempt

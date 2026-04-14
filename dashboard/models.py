@@ -30,6 +30,7 @@ class Incident(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     severity = models.CharField(max_length=50, choices=SEVERITY_CHOICES, default='Inconnue')
     ai_severity = models.CharField(max_length=50, choices=SEVERITY_CHOICES, default='Inconnue')
     assigned_technician = models.ForeignKey('Technician', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_incidents')

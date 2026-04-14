@@ -24,7 +24,7 @@ if env_path.exists():
     load_dotenv(env_path)
 
 # Gemini API Key - Récupérée depuis .env ou définie directement ici
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyAoL98NRLG6Aohh_RLdfAWHskULwjLCDiY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyBdjQDK72my7edLRpWRw47UTGTOFGZ13e0')
 
 # Telegram Bot Token - Récupéré depuis .env ou défini directement ici
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8602841628:AAE3-OzPgOfA53ZwL3B5nG_KO-IRl5T-UK0')

@@ -6,6 +6,9 @@ CityAlert est une plateforme professionnelle de supervision urbaine multiservice
 - **Bot Telegram Intelligent** : Signalement citoyen fluide avec analyse de photos par IA.
 - **Tableau de Bord Premium** : Design "Command Center" futuriste (Dark Mode, Cyan Néon) pour une supervision haute performance.
 - **IA de Vision Avancée** : Intégration de Google Gemini pour l'expertise automatique des signalements.
+- **Haute Disponibilité IA** : Système de secours automatique (Gemini 2.0 Flash → Gemini 1.5 Flash) pour garantir une réponse même en cas de quota atteint.
+- **Cerveau Local (Infaillibilité)** : Base de connaissances locale intégrée permettant à l'assistant de répondre instantanément aux questions de base sans solliciter l'IA.
+- **Commandes Vocales** : Assistant intelligent acceptant la voix et le texte pour une interaction mains-libres.
 
 ## 🚀 Fonctionnalités Professionnelles
 
@@ -18,9 +21,11 @@ CityAlert est une plateforme professionnelle de supervision urbaine multiservice
 
 ### 🧠 Intelligence Artificielle & Robustesse
 
-- **Google Gemini 1.5 Flash** : Analyse visuelle ultra-rapide pour détecter la catégorie et la gravité des incidents.
-- **Optimisation de Flux** : Compression automatique des images et stratégie de **retries** (tentatives) pour garantir le fonctionnement même sur réseaux instables.
-- **Bot Conversationnel** : Assistant IA intégré au dashboard pour répondre aux questions des administrateurs.
+- **Google Gemini 2.0 Flash (Primaire)** : Analyse visuelle et textuelle de pointe pour une précision maximale.
+- **Haute Disponibilité (Failover)** : Basculement transparent vers Gemini 1.5 Flash si l'API 2.0 est saturée.
+- **Cerveau Local Intégré** : Réponse instantanée aux questions de fonctionnement (aide, signalement, profil) via une base de données locale sécurisée.
+- **Assistant Premium mémoriel** : Chatbot du dashboard doté d'une mémoire de conversation et d'un design Glassmorphism ultra-moderne.
+- **Interface Vocale (STT)** : Transcription audio intégrée pour piloter l'assistant par la voix.
 - **Expérience Citoyenne** : Bot Telegram complet avec gestion de profil et notifications d'état.
 
 ### 🗺️ Intelligence Géographique & Mapping

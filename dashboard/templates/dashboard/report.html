@@ -24,6 +24,11 @@
                 </div>
 
                 <img id="photoPreview" alt="Aperçu" class="photo-preview hidden" />
+                
+                <div id="analysisOverlay" class="analysis-overlay hidden">
+                    <div class="scan-line"></div>
+                    <div class="analysis-text">AI Scanning...</div>
+                </div>
             </div>
             <p class="hint">Une photo est requise pour que le signalement soit pris en compte.</p>
         </section>
@@ -31,10 +36,52 @@
         <input type="hidden" name="latitude" id="latitudeInput" value="">
         <input type="hidden" name="longitude" id="longitudeInput" value="">
 
-        <!-- Champs remplis automatiquement après analyse IA -->
-        <input type="hidden" name="category" id="categoryInput" value="Eau">
-        <input type="hidden" name="severity" id="severityInput" value="Moyenne">
-        <input type="hidden" name="description" id="descriptionInput" value="">
+        <div id="validationSection" class="validation-section hidden">
+            <section class="card">
+                <div id="aiStatus" class="ai-status-badge"></div>
+                
+                <div class="field">
+                    <label>Catégorie de l'incident</label>
+                    <div class="category-grid">
+                        <div class="category-option" data-cat="Eau" onclick="selectCategory('Eau')">
+                            <i class="fas fa-tint"></i>
+                            <span>Eau / Fuite</span>
+                        </div>
+                        <div class="category-option" data-cat="Accident" onclick="selectCategory('Accident')">
+                            <i class="fas fa-car-crash"></i>
+                            <span>Accident</span>
+                        </div>
+                        <div class="category-option" data-cat="Électricité" onclick="selectCategory('Électricité')">
+                            <i class="fas fa-bolt"></i>
+                            <span>Électricité</span>
+                        </div>
+                        <div class="category-option" data-cat="Autre" onclick="selectCategory('Autre')">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Autre</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="category" id="categoryInput" value="Eau">
+                </div>
+
+                <div class="field">
+                    <label>Niveau de gravité</label>
+                    <div class="severity-selector">
+                        <button type="button" class="severity-btn" data-val="Basse" onclick="selectSeverity('Basse')">Basse</button>
+                        <button type="button" class="severity-btn" data-val="Moyenne" onclick="selectSeverity('Moyenne')">Moyenne</button>
+                        <button type="button" class="severity-btn" data-val="Élevée" onclick="selectSeverity('Élevée')">Élevée</button>
+                    </div>
+                    <input type="hidden" name="severity" id="severityInput" value="Moyenne">
+                </div>
+
+                <div class="field">
+                    <label for="descriptionInput">Description des faits</label>
+                    <textarea name="description" id="descriptionInput" placeholder="Décrivez l'incident en quelques mots..."></textarea>
+                    <p class="small-note">
+                        <i class="fas fa-info-circle"></i> Vous pouvez modifier ces informations si l'analyse IA est incomplète.
+                    </p>
+                </div>
+            </section>
+        </div>
 
         <div class="actions">
             <button type="submit" id="submitBtn" class="btn-primary" disabled aria-label="Envoyer le signalement (désactivé tant qu'une photo valide n'est pas ajoutée)">
@@ -50,14 +97,23 @@
 
 <style>
 :root {
-    --background: transparent;
-    --card-bg: rgba(17, 24, 39, 0.45);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: rgba(226, 232, 240, 0.75);
-    --primary: #00f0ff;
-    --accent: #ff3366;
+    /* Mappage des variables locales vers les globales de base.html pour la cohérence */
+    --primary: var(--accent-blue);
+    --accent: var(--accent-orange);
+    --success: var(--success);
+    --warning: var(--accent-yellow);
+    --danger: var(--danger);
+    --report-card-bg: var(--card-bg);
+}
+
+/* Ajustements spécifiques pour le mode clair */
+body.light-theme .report-page {
+    --report-card-bg: #ffffff;
+    --field-bg: #f1f5f9;
+}
+
+body:not(.light-theme) .report-page {
+    --field-bg: rgba(15, 23, 42, 0.55);
 }
 
 .report-page {
@@ -66,6 +122,93 @@
     padding: 2rem 1.25rem;
     min-height: calc(100vh - 4rem);
 }
+
+.validation-section {
+    margin-top: 2rem;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.category-option {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.category-option, .severity-btn {
+    background: var(--field-bg);
+    color: var(--text-muted);
+}
+
+.category-option span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.category-option.selected i { color: var(--primary); transform: scale(1.1); }
+.category-option.selected span { color: var(--text-main); }
+.category-option.selected { border-color: var(--primary); background: rgba(0, 240, 255, 0.1); }
+
+body.light-theme .category-option.selected { background: rgba(37, 99, 235, 0.08); }
+body.light-theme .severity-btn.selected[data-val="Moyenne"] { background: rgba(217, 119, 6, 0.1); }
+
+.severity-selector {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.severity-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: rgba(15, 23, 42, 0.4);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.severity-btn.selected[data-val="Basse"] { background: rgba(16, 185, 129, 0.2); border-color: var(--success); color: #10b981; }
+.severity-btn.selected[data-val="Moyenne"] { background: rgba(245, 158, 11, 0.2); border-color: var(--warning); color: #f59e0b; }
+.severity-btn.selected[data-val="Élevée"] { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: #ef4444; }
+
+.ai-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+}
+
+.ai-status-badge.ai-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.ai-status-badge.ai-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
 .report-header {
     text-align: center;
@@ -76,30 +219,32 @@
     font-size: 2.25rem;
     font-weight: 800;
     margin: 0;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .report-title p {
     margin: 0.75rem auto 0;
     max-width: 620px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     line-height: 1.6;
 }
 
 .card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
+    background: var(--report-card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 22px;
     padding: 1.75rem 1.75rem 2rem;
     margin-bottom: 1.75rem;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
 }
 
 .card-title {
     margin: 0 0 1rem;
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .photo-upload {
@@ -123,6 +268,55 @@
 
 .photo-upload.has-image {
     border-style: solid;
+    border-color: var(--primary);
+}
+
+.photo-upload.drag-over {
+    border-color: var(--primary);
+    background: rgba(0, 240, 255, 0.05);
+    transform: scale(1.02);
+}
+
+.analysis-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 20, 40, 0.4);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 16px;
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to bottom, transparent, var(--primary), transparent);
+    box-shadow: 0 0 20px var(--primary);
+    animation: scanAnim 2s infinite ease-in-out;
+    z-index: 11;
+}
+
+@keyframes scanAnim {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+.analysis-text {
+    color: var(--primary);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
 }
 
 .photo-placeholder {
@@ -142,7 +336,7 @@
 .photo-placeholder p {
     margin: 0;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .photo-placeholder small {
@@ -174,7 +368,7 @@
 
 .field label {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-main);
 }
 
 .field input,
@@ -183,11 +377,11 @@
     width: 100%;
     padding: 0.9rem 1rem;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(15, 23, 42, 0.55);
-    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    background: var(--field-bg);
+    color: var(--text-main);
     font-family: inherit;
-    transition: border 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .field input:focus,
@@ -203,10 +397,11 @@
     resize: vertical;
 }
 
-.small-note p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+.small-note {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    color: var(--text-muted);
 }
 
 .actions {
@@ -305,11 +500,28 @@ const categoryInput = document.getElementById('categoryInput');
 const severityInput = document.getElementById('severityInput');
 const descriptionInput = document.getElementById('descriptionInput');
 const toastContainer = document.getElementById('toastContainer');
+const analysisOverlay = document.getElementById('analysisOverlay');
+const validationSection = document.getElementById('validationSection');
+const aiStatus = document.getElementById('aiStatus');
 
 const analyzeUrl = "{% url 'dashboard:analyze_incident_api' %}";
 
 function triggerFileInput() {
     imageInput.click();
+}
+
+function selectCategory(cat) {
+    categoryInput.value = cat;
+    document.querySelectorAll('.category-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.cat === cat);
+    });
+}
+
+function selectSeverity(sev) {
+    severityInput.value = sev;
+    document.querySelectorAll('.severity-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.val === sev);
+    });
 }
 
 function showToast(message, type = 'success') {
@@ -331,14 +543,20 @@ let analysisValid = false;
 function setUploadState(hasImage) {
     if (hasImage) {
         uploadZone.classList.add('has-image');
-        photoPlaceholder.style.display = 'none';
-        submitBtn.disabled = true; // enabled only after analyse confirms valide
+        photoPlaceholder.classList.add('hidden');
+        photoPreview.classList.remove('hidden');
+        analysisOverlay.classList.remove('hidden');
+        validationSection.classList.add('hidden'); // Cacher pendant l'analyse
+        submitBtn.disabled = true;
         submitHint.textContent = 'Analyse en cours...';
         runAnalysis();
     } else {
         uploadZone.classList.remove('has-image');
-        photoPlaceholder.style.display = 'flex';
-        photoPreview.style.display = 'none';
+        photoPlaceholder.classList.remove('hidden');
+        photoPreview.classList.add('hidden');
+        analysisOverlay.classList.add('hidden');
+        validationSection.classList.add('hidden');
+        photoPreview.src = '';
         submitBtn.disabled = true;
         submitHint.textContent = 'Ajoutez une photo pour activer l’envoi.';
         analysisValid = false;
@@ -360,39 +578,87 @@ async function runAnalysis() {
         });
 
         const data = await response.json();
+        analysisOverlay.classList.add('hidden');
+        validationSection.classList.remove('hidden');
+        
         if (data.status === 'success' && data.is_valid) {
             analysisValid = true;
-            categoryInput.value = data.detected_category || categoryInput.value;
-            severityInput.value = data.suggested_severity || severityInput.value;
-            descriptionInput.value = data.ai_comment || descriptionInput.value;
+            selectCategory(data.detected_category || 'Eau');
+            selectSeverity(data.suggested_severity || 'Moyenne');
+            descriptionInput.value = data.ai_comment || '';
+            
+            aiStatus.innerHTML = '<i class="fas fa-robot"></i> Analyse IA Réussie';
+            aiStatus.className = 'ai-status-badge ai-ok';
+            
             submitBtn.disabled = false;
-            submitHint.textContent = 'Prêt à envoyer.';
-            showToast('Analyse réussie ! Vous pouvez envoyer.', 'success');
+            submitHint.textContent = 'Vérifiez les détails et envoyez.';
+            showToast('Analyse réussie !', 'success');
         } else {
-            analysisValid = false;
-            submitBtn.disabled = true;
-            submitHint.textContent = 'L’image ne semble pas être un incident valide.';
-            showToast(data.message || 'L’image ne semble pas être un incident valide.', 'error');
+            // Mode Manuel si l'IA sature ou ne reconnaît pas
+            analysisValid = true; // Autoriser quand même l'envoi manuel
+            selectCategory('Eau');
+            selectSeverity('Moyenne');
+            descriptionInput.value = '';
+            
+            aiStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> IA Indisponible - Saisie Manuelle';
+            aiStatus.className = 'ai-status-badge ai-error';
+            
+            submitBtn.disabled = false;
+            submitHint.textContent = 'Remplissez les détails manuellement.';
+            showToast(data.message || 'IA indisponible, mode manuel activé.', 'warning');
         }
     } catch (err) {
-        analysisValid = false;
-        submitBtn.disabled = true;
-        submitHint.textContent = 'Erreur d’analyse. Réessayez.';
-        showToast('Erreur lors de l’analyse. Réessayez.', 'error');
+        analysisOverlay.classList.add('hidden');
+        validationSection.classList.remove('hidden');
+        analysisValid = true;
+        
+        aiStatus.innerHTML = '<i class="fas fa-plug"></i> Mode Manuel activé';
+        aiStatus.className = 'ai-status-badge ai-error';
+        
+        submitBtn.disabled = false;
+        submitHint.textContent = 'Remplissez les détails manuellement.';
+        showToast('Erreur d’analyse. Saisie manuelle activée.', 'error');
     }
 }
 
-imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
-    if (!file) return setUploadState(false);
+function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        showToast('Veuillez sélectionner une image valide.', 'error');
+        return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
         photoPreview.src = e.target.result;
-        photoPreview.style.display = 'block';
         setUploadState(true);
     };
     reader.readAsDataURL(file);
+}
+
+// Drag & Drop
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag-over');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        imageInput.files = files;
+        handleFile(files[0]);
+    }
+});
+
+imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (!file) return setUploadState(false);
+    handleFile(file);
 });
 
 function fillGeolocation() {
