@@ -4,751 +4,226 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
-    <title>Bienvenue | CityAlert</title>
+    <title>Connexion | CityAlert Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         :root {
-            --primary-orange: #00f0ff; /* Neon Cyan */
-            --dark-bg: #030712;
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --accent: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.4);
+            --bg: #030712;
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.05);
+            --error: #fb7185;
+            --success: #10b981;
         }
 
-        .hero-title-gradient {
-            color: #00f0ff;
-            text-shadow: 0 0 20px rgba(0,240,255,0.6);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Outfit', sans-serif;
-            height: 100vh;
-            width: 100vw;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             overflow: hidden;
-            display: flex;
-            background-color: var(--dark-bg);
+            position: relative;
         }
 
-        .wrapper {
-            display: flex;
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(at 0% 0%, hsla(180, 100%, 50%, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(210, 100%, 50%, 0.05) 0px, transparent 50%);
+            z-index: -1;
+        }
+
+        .login-card {
             width: 100%;
-            height: 100%;
+            max-width: 400px;
+            padding: 1.75rem 2rem;
+            background: var(--card-bg);
+            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .hero-side {
-            flex: 1.2;
-            position: relative;
-            background: url('{% static "img/login_bg.png" %}') no-repeat center center;
-            background-size: cover;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-            padding: 3rem;
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero-side::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(3, 7, 18, 0.7); /* Plus sombre pour faire ressortir les néons */
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-content h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .hero-content p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 3rem;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .social-dots {
-            display: flex;
-            gap: 1.25rem;
-            justify-content: center;
-        }
-
-        .social-dot {
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 255, 255, 0.15);
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .social-dot:hover {
-            background: #fff;
-            color: #000;
-            transform: translateY(-3px);
-        }
-
-        .form-side {
-            flex: 0.8;
-            background: #1e293b;
-            padding: 4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            color: white;
-            position: relative;
-        }
-
-        .form-container {
-            width: 100%;
-        }
-
-        .form-title {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .form-subtitle {
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            font-size: 0.95rem;
-        }
-
-        .tabs-simple {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .tab-simple {
-            padding-bottom: 0.75rem;
-            cursor: pointer;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.4);
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .tab-simple.active {
-            color: var(--primary-orange);
-        }
-
-        .tab-simple.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--primary-orange);
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-            position: relative;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding-bottom: 1rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.4);
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .tab.active {
-            color: var(--primary-orange);
-        }
-
-        .tabs::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 50%;
-            height: 2px;
-            background: var(--primary-orange);
-            transition: transform 0.3s;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
+        .header { text-align: center; margin-bottom: 1.25rem; }
+        .logo-icon { 
+            font-size: 2rem; 
+            color: var(--accent);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
             margin-bottom: 0.75rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
         }
+        .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+        .header p { color: var(--text-muted); font-size: 0.85rem; }
 
-        .input-box {
-            position: relative;
-        }
-
-        .input-box input {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
+        .btn-social {
+            padding: 0.65rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            color: white;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .input-box input:focus {
-            border-color: var(--primary-orange);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-/* Style pour les champs de formulaire Django */
-        .input-box input[type="text"],
-        .input-box input[type="password"],
-        .input-box input[type="email"] {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            padding-left: 3rem;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: white;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .input-box i {
-            position: absolute;
-            left: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            transition: all 0.3s;
-        }
-
-        .input-box input:focus + i {
-            color: var(--primary-orange);
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 10;
-            background: none;
-            border: none;
-            font-size: 1rem;
-            padding: 8px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .password-toggle:hover {
-            color: var(--primary-orange);
-            background: rgba(255, 107, 53, 0.1);
-        }
-
-        .password-toggle.active {
-            color: var(--primary-orange);
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
-            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        .input-box.password-visible {
-            position: relative;
-        }
-
-        .input-box.password-visible input {
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.05));
-            border-color: var(--primary-orange);
-            box-shadow: 0 0 25px rgba(255, 107, 53, 0.2);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        .input-box.password-visible input:focus {
-            border-color: var(--primary-orange);
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(255, 107, 53, 0.08));
-            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
-        }
-
-        .input-box.password-visible i:first-child {
-            color: var(--primary-orange);
-            animation: iconPulse 2s infinite;
-        }
-
-        .input-box.password-visible .password-toggle {
-            background: linear-gradient(135deg, var(--primary-orange), #ff8c42);
-            color: white;
-            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .input-box.password-visible .password-toggle:hover {
-            background: linear-gradient(135deg, #ff8c42, var(--primary-orange));
-            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
-            transform: translateY(-50%) scale(1.15);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: translateY(-50%) scale(1.1); }
-            50% { transform: translateY(-50%) scale(1.05); }
-        }
-
-        @keyframes glow {
-            from { box-shadow: 0 0 25px rgba(255, 107, 53, 0.2); }
-            to { box-shadow: 0 0 35px rgba(255, 107, 53, 0.4); }
-        }
-
-        @keyframes iconPulse {
-            0%, 100% { transform: translateY(-50%) scale(1); }
-            50% { transform: translateY(-50%) scale(1.1); }
-        }
-
-        .otp-input-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 2rem;
-        }
-
-        .otp-input {
-            width: 50px;
-            height: 60px;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: white;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .otp-input:focus {
-            border-color: var(--primary-orange);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
-        }
-
-        .password-reset-step {
-            display: none;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .password-reset-step.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .errorlist {
-            color: #ef4444;
+            color: var(--text);
             font-size: 0.85rem;
-            margin-bottom: 1rem;
-            list-style: none;
-            padding: 0;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 1.15rem;
-            background: var(--primary-orange);
-            color: #030712;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
+            font-weight: 500;
             cursor: pointer;
-            margin-top: 1rem;
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s;
         }
-
-        .btn-login:hover {
-            filter: brightness(1.2);
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-        }
+        .btn-social:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+        .btn-social img { width: 18px; height: 18px; }
 
         .divider {
-            display: flex;
-            align-items: center;
-            margin: 2.5rem 0;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 0.8rem;
-            text-transform: lowercase;
+            display: flex; align-items: center; margin-bottom: 1.25rem;
+            color: var(--text-muted); font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .divider::before { margin-right: 12px; }
+        .divider::after { margin-left: 12px; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; margin-left: 4px; }
+        
+        .input-wrapper { position: relative; width: 100%; }
+        .input-wrapper input {
+            width: 100%; padding: 0.75rem 2.8rem 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 0.95rem;
+            outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .input-wrapper input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08); }
+        
+        .toggle-password {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.1rem; padding: 4px;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .divider:not(:empty)::before { margin-right: 1.5rem; }
-        .divider:not(:empty)::after { margin-left: 1.5rem; }
-
-        .btn-social {
-            width: 100%;
-            padding: 0.9rem;
-            background: transparent;
-            border: 1px solid var(--border-color);
+        .error-alert {
+            background: rgba(251, 113, 133, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 8px;
             border-radius: 10px;
-            color: white;
             margin-bottom: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            font-family: inherit;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-        }
-
-        .btn-social:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .register-section {
-            margin-top: 2.5rem;
+            font-size: 0.75rem;
             text-align: center;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .btn-register-premium {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, var(--primary-orange) 0%, #0088ff 100%);
-            color: #030712;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 800;
-            font-size: 1rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
-            border: 2px solid transparent;
-        }
+        .form-footer { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; font-size: 0.8rem; }
+        .remember-me { display: flex; align-items: center; gap: 6px; color: var(--text-muted); cursor: pointer; }
+        .remember-me input { accent-color: var(--accent); width: 14px; height: 14px; }
+        .forgot-link { color: var(--accent); text-decoration: none; font-weight: 600; }
 
-        .btn-register-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.6s;
+        .btn-submit {
+            width: 100%; padding: 0.9rem;
+            background: linear-gradient(135deg, var(--accent), #00c0ff);
+            color: #020617; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px -5px rgba(0, 240, 255, 0.3);
         }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0, 240, 255, 0.4); }
 
-        .btn-register-premium:hover::before {
-            left: 100%;
-        }
+        .register-footer { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+        .register-link { color: var(--text); text-decoration: none; font-weight: 700; margin-left: 0.3rem; }
 
-        .btn-register-premium:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(0, 240, 255, 0.5);
-            border-color: rgba(255, 255, 255, 0.4);
+        .security-badge {
+            margin-top: 1.5rem; display: flex; align-items: center; justify-content: center;
+            gap: 6px; font-size: 0.7rem; color: var(--text-muted); opacity: 0.6;
         }
-
-        .btn-register-premium:active {
-            transform: translateY(-1px) scale(0.98);
-        }
-
-        .btn-text {
-            position: relative;
-            z-index: 2;
-        }
-
-        .btn-register-premium i {
-            position: relative;
-            z-index: 2;
-            transition: transform 0.3s ease;
-        }
-
-        .btn-register-premium:hover i {
-            transform: translateX(4px);
-        }
-
-        .remember-forgot-container {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 2rem; 
-            font-size: 0.85rem;
-        }
-
-        .remember-label {
-            display: flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            color: rgba(255,255,255,0.5); 
-            cursor: pointer;
-        }
-
-        .forgot-password-link {
-            color: var(--primary-orange); 
-            text-decoration: none; 
-            font-weight: 600;
-        }
-
-        .register-text {
-            color: rgba(255, 255, 255, 0.6); 
-            margin-bottom: 1rem; 
-            font-size: 0.9rem;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1024px) {
-            .hero-side {
-                flex: 1;
-                padding: 2rem;
-            }
-            .form-side {
-                flex: 1;
-                padding: 3rem 2.5rem;
-            }
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-            .hero-content p {
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                overflow-y: auto;
-                overflow-x: hidden;
-            }
-            .wrapper {
-                flex-direction: column;
-                min-height: 100vh;
-            }
-            .hero-side {
-                flex: none;
-                min-height: 35vh;
-                padding: 2rem 1.5rem;
-            }
-            .hero-content h1 {
-                font-size: 2rem;
-            }
-            .hero-content p {
-                font-size: 0.95rem;
-                margin-bottom: 1.5rem;
-            }
-            .form-side {
-                flex: 1;
-                padding: 2rem 1.5rem;
-                min-height: 65vh;
-            }
-            .form-title {
-                font-size: 1.6rem;
-            }
-            .form-subtitle {
-                margin-bottom: 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero-side {
-                min-height: 28vh;
-                padding: 1.5rem 1rem;
-            }
-            .hero-content h1 {
-                font-size: 1.5rem;
-            }
-            .hero-content p {
-                font-size: 0.85rem;
-                margin-bottom: 1rem;
-            }
-            .social-dots {
-                gap: 0.75rem;
-            }
-            .social-dot {
-                width: 38px;
-                height: 38px;
-                font-size: 1rem;
-            }
-            .form-side {
-                padding: 1.5rem 1.25rem;
-            }
-            .form-title {
-                font-size: 1.4rem;
-            }
-            .form-group label {
-                font-size: 0.85rem;
-            }
-            .input-box input,
-            .input-box input[type="text"],
-            .input-box input[type="password"],
-            .input-box input[type="email"] {
-                padding: 0.85rem 1rem;
-                padding-left: 2.75rem;
-                font-size: 0.9rem;
-            }
-            .btn-login {
-                padding: 0.9rem;
-                font-size: 1rem;
-            }
-            .remember-forgot-container {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-            }
-            .btn-register-premium {
-                padding: 0.85rem 1.5rem;
-                font-size: 0.9rem;
-            }
-        }
+        .security-badge i { color: var(--success); }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="hero-side">
-            <div class="hero-content">
-                <h1 class="hero-title-gradient">Command Center<br>CityAlert</h1>
-                <p>Authentification Sécurisée requise pour l'accès aux opérations de gestion d'incidents urbains.</p>
-            </div>
+    <div class="mesh-bg"></div>
+    <div class="login-card">
+        <div class="header">
+            <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+            <h1>Bienvenue</h1>
+            <p>Intelligence Urbaine CityAlert</p>
         </div>
 
-        <div class="form-side">
-            <div class="form-container">
-                    <h2 class="form-title">Bon retour !</h2>
-                    <p class="form-subtitle">Connectez-vous pour accéder à votre console.</p>
+        <div class="social-grid">
+            <button class="btn-social" title="Se connecter avec Google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                Google
+            </button>
+            <button class="btn-social" title="Se connecter avec Apple">
+                <i class="fab fa-apple"></i> 
+                Apple
+            </button>
+        </div>
 
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        {{ form.non_field_errors }}
-                        
-                        <div class="form-group">
-                            <label>Email</label>
-                            <div class="input-box">
-                                {{ form.username }}
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                        </div>
+        <div class="divider"><span>ou email</span></div>
 
-                        <div class="form-group">
-                            <label>Mot de passe</label>
-                            <div class="input-box">
-                                {{ form.password }}
-                                <i class="fas fa-lock"></i>
-                                 <button type="button" class="password-toggle" onclick="togglePassword(this)" title="Afficher/Masquer le mot de passe" aria-label="Afficher/Masquer le mot de passe">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="error-alert">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
 
-                        <div class="remember-forgot-container">
-                            <label class="remember-label">
-                                <input type="checkbox" name="remember_me" value="true"> Se souvenir de moi
-                            </label>
-                            <a href="{% url 'dashboard:password_reset_request' %}" class="forgot-password-link">Mot de passe oublié ?</a>
-                        </div>
-
-                        <button type="submit" class="btn-login">Se connecter</button>
-                    </form>
-
-                    <div class="register-section">
-                        <p class="register-text">Pas encore de compte ?</p>
-                        <a href="{% url 'dashboard:register' %}" class="btn-register-premium">
-                            <span class="btn-text">Créer un compte</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
+            <div class="form-group">
+                <label for="id_username">Email professionnel</label>
+                <div class="input-wrapper">
+                    <input type="email" name="username" id="id_username" placeholder="nom@exemple.com" required autofocus>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="id_password">Mot de passe</label>
+                <div class="input-wrapper">
+                    <input type="password" name="password" id="id_password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('id_password', this)" aria-label="Afficher/Masquer le mot de passe" title="Afficher/Masquer le mot de passe">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <label class="remember-me"><input type="checkbox" name="remember_me"> Se souvenir</label>
+                <a href="{% url 'dashboard:password_reset_request' %}" class="forgot-link">Oublié ?</a>
+            </div>
+
+            <button type="submit" class="btn-submit">Se connecter</button>
+        </form>
+
+        <div class="register-footer">
+            Nouveau ? <a href="{% url 'dashboard:register' %}" class="register-link">S'inscrire</a>
         </div>
+
+        <div class="security-badge"><i class="fas fa-lock"></i> Connexion sécurisée CityAlert</div>
     </div>
 
     <script>
-        // Ajouter les placeholders aux champs de formulaire Django
-        document.addEventListener('DOMContentLoaded', function() {
-            const usernameInput = document.querySelector('input[name="username"]');
-            const passwordInput = document.querySelector('input[name="password"]');
-            
-            if (usernameInput) {
-                usernameInput.placeholder = 'votre@email.com';
-                usernameInput.setAttribute('type', 'email');
-            }
-            if (passwordInput) {
-                passwordInput.placeholder = 'Votre mot de passe';
-            }
-        });
-
-        // Fonction pour basculer la visibilité du mot de passe
-        function togglePassword(button) {
-            const input = button.parentElement.querySelector('input');
-            const icon = button.querySelector('i');
-            const inputBox = button.parentElement;
-            
+        function togglePasswordVisibility(id, btn) {
+            const input = document.getElementById(id);
+            const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
-                button.classList.add('active');
-                inputBox.classList.add('password-visible');
             } else {
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
-                button.classList.remove('active');
-                inputBox.classList.remove('password-visible');
             }
         }
     </script>
 </body>
 </html>
-

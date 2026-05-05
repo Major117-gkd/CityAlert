@@ -4,427 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
-    <title>Inscription | CityAlert</title>
+    <title>Inscription | CityAlert Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         :root {
-            --primary-orange: #00f0ff;
-            --dark-bg: #030712;
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --accent: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.4);
+            --bg: #030712;
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --text: #f8fafc;
             --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.05);
+            --error: #fb7185;
+            --success: #10b981;
         }
 
-        .hero-title-gradient {
-            color: #00f0ff;
-            text-shadow: 0 0 20px rgba(0,240,255,0.6);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Outfit', sans-serif;
-            height: 100vh;
-            width: 100vw;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             overflow: hidden;
-            display: flex;
-            background-color: var(--dark-bg);
+            position: relative;
         }
 
-        .wrapper {
-            display: flex;
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(at 100% 0%, hsla(180, 100%, 50%, 0.05) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(210, 100%, 50%, 0.05) 0px, transparent 50%);
+            z-index: -1;
+        }
+
+        .login-card {
             width: 100%;
-            height: 100%;
+            max-width: 400px;
+            padding: 1.75rem 2rem;
+            background: var(--card-bg);
+            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .hero-side {
-            flex: 1.2;
-            position: relative;
-            background: url('{% static "img/login_bg.png" %}') no-repeat center center;
-            background-size: cover;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-            padding: 3rem;
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero-side::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(3, 7, 18, 0.7);
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-content h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .hero-content p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 3rem;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .form-side {
-            flex: 0.8;
-            background: #1e293b;
-            padding: 4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            color: white;
-            position: relative;
-        }
-
-        .form-container {
-            width: 100%;
-        }
-
-        .form-title {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .form-subtitle {
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
+        .header { text-align: center; margin-bottom: 1.25rem; }
+        .logo-icon { 
+            font-size: 2rem; 
+            color: var(--accent);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
             margin-bottom: 0.75rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
+        }
+        .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+        .header p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; margin-left: 4px; }
+        
+        .input-wrapper { position: relative; width: 100%; }
+        .input-wrapper input {
+            width: 100%; padding: 0.75rem 2.8rem 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 0.95rem;
+            outline: none; transition: 0.2s;
+        }
+        .input-wrapper input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08); }
+        
+        .toggle-password {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
         }
 
-        .input-box {
-            position: relative;
+        .btn-submit {
+            width: 100%; padding: 0.9rem;
+            background: linear-gradient(135deg, var(--accent), #00c0ff);
+            color: #020617; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px -5px rgba(0, 240, 255, 0.3);
+            margin-top: 0.5rem;
         }
+        .btn-submit:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .input-box input {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            padding-left: 3rem;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: white;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s;
-        }
+        .footer-links { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+        .link { color: var(--text); text-decoration: none; font-weight: 700; margin-left: 0.3rem; }
 
-        .input-box i {
-            position: absolute;
-            left: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            transition: all 0.3s;
+        .toast {
+            position: fixed; top: 24px; right: 24px;
+            padding: 1rem 1.5rem; border-radius: 14px; color: white;
+            font-weight: 600; z-index: 9999;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
         }
-
-        .input-box input:focus + i {
-            color: var(--primary-orange);
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 10;
-            background: none;
-            border: none;
-            font-size: 1rem;
-            padding: 8px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .password-toggle:hover {
-            color: var(--primary-orange);
-            background: rgba(255, 107, 53, 0.1);
-        }
-
-        .password-toggle.active {
-            color: var(--primary-orange);
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
-            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        .input-box.password-visible input {
-            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(0, 240, 255, 0.05));
-            border-color: var(--primary-orange);
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.2);
-        }
-
-        .input-box.password-visible i:first-child {
-            color: var(--primary-orange);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: translateY(-50%) scale(1.1); }
-            50% { transform: translateY(-50%) scale(1.05); }
-        }
-
-        .input-box input:focus {
-            border-color: var(--primary-orange);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
-        }
-
-        .errorlist {
-            color: #ef4444;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            list-style: none;
-            padding: 0;
-        }
-
-        .btn-register {
-            width: 100%;
-            padding: 1.15rem;
-            background: var(--primary-orange);
-            color: #030712;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
-        }
-
-        .btn-register:hover {
-            filter: brightness(1.2);
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-        }
-
-        .btn-register:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.85rem;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .back-link a {
-            color: var(--primary-orange);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .back-link a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 900px) {
-            .hero-side { display: none; }
-            .form-side { flex: 1; padding: 2rem; }
-        }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="hero-side">
-            <div class="hero-content">
-                <h1 class="hero-title-gradient">Command Center<br>CityAlert</h1>
-                <p>Créez votre accès prioritaire pour gérer et surveiller les incidents urbains de demain.</p>
-            </div>
+    <div class="mesh-bg"></div>
+    <div class="login-card">
+        <div class="header">
+            <div class="logo-icon"><i class="fas fa-user-plus"></i></div>
+            <h1>Créer un compte</h1>
+            <p>Accès CityAlert Intelligence</p>
         </div>
 
-        <div class="form-side">
-            <div class="form-container">
-                <h2 class="form-title">Créer un compte</h2>
-                <p class="form-subtitle">Rejoignez CityAlert pour un meilleur suivi urbain.</p>
+        <form onsubmit="handleRegister(event)">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="reg_email">Email professionnel</label>
+                <div class="input-wrapper"><input type="email" id="reg_email" placeholder="nom@entreprise.com" required autofocus></div>
+            </div>
 
-                <form onsubmit="handleRegister(event)">
-                    {% csrf_token %}
-                    {{ form.non_field_errors }}
-                    
-                    <div class="form-group">
-                        <label>Email</label>
-                        <div class="input-box">
-                            <input type="email" id="reg_email" placeholder="votre@email.com" required>
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Mot de passe</label>
-                        <div class="input-box">
-                            <input type="password" id="reg_password" placeholder="Créez un mot de passe" required>
-                            <i class="fas fa-lock"></i>
-                            <button type="button" class="password-toggle" onclick="togglePassword(this)" title="Afficher/Masquer le mot de passe" aria-label="Afficher/Masquer le mot de passe">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Confirmer le mot de passe</label>
-                        <div class="input-box">
-                            <input type="password" id="reg_password_confirm" placeholder="Confirmez votre mot de passe" required>
-                            <i class="fas fa-shield-alt"></i>
-                            <button type="button" class="password-toggle" onclick="togglePassword(this)" title="Afficher/Masquer le mot de passe" aria-label="Afficher/Masquer le mot de passe">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-register" id="registerBtn">S'inscrire</button>
-                </form>
-
-                <div class="back-link">
-                    <a href="{% url 'dashboard:login' %}">Déjà un compte ? Se connecter</a>
+            <div class="form-group">
+                <label for="reg_password">Mot de passe</label>
+                <div class="input-wrapper">
+                    <input type="password" id="reg_password" placeholder="8 caractères min." required>
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('reg_password', this)" aria-label="Afficher/Masquer" title="Afficher/Masquer">
+                        <i class="far fa-eye"></i>
+                    </button>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="reg_password_confirm">Confirmation</label>
+                <div class="input-wrapper">
+                    <input type="password" id="reg_password_confirm" placeholder="Répétez le mot de passe" required>
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('reg_password_confirm', this)" aria-label="Afficher/Masquer" title="Afficher/Masquer">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="registerBtn">Créer mon accès</button>
+        </form>
+
+        <div class="footer-links">
+            Déjà membre ? <a href="{% url 'dashboard:login' %}" class="link">Se connecter</a>
         </div>
     </div>
 
     <script>
+        function togglePasswordVisibility(id, btn) {
+            const input = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
         async function handleRegister(event) {
             event.preventDefault();
             const email = document.getElementById('reg_email').value;
             const password = document.getElementById('reg_password').value;
             const password_confirm = document.getElementById('reg_password_confirm').value;
-
-            if (password !== password_confirm) {
-                showToast("Les mots de passe ne correspondent pas.", "error");
-                return;
-            }
-
-            if (password.length < 8) {
-                showToast("Le mot de passe doit faire au moins 8 caractères.", "error");
-                return;
-            }
+            if (password !== password_confirm) return showToast("Mots de passe différents.", "error");
 
             const btn = document.getElementById('registerBtn');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inscription...';
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
 
             try {
                 const response = await fetch("{% url 'dashboard:register' %}", {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                     body: JSON.stringify({ email, password })
                 });
-
                 const data = await response.json();
                 if (data.status === 'success') {
-                    showToast("Inscription réussie ! Redirection...", "success");
-                    setTimeout(() => {
-                        window.location.href = "{% url 'dashboard:dashboard_index' %}";
-                    }, 1500);
+                    showToast("Compte créé !", "success");
+                    setTimeout(() => window.location.href = "{% url 'dashboard:dashboard_index' %}", 1200);
                 } else {
-                    showToast(data.message || "Erreur lors de l'inscription", "error");
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
+                    showToast(data.message || "Erreur système", "error");
+                    btn.disabled = false; btn.innerHTML = 'Créer mon accès';
                 }
             } catch (error) {
-                showToast("Une erreur est survenue lors de l'inscription.", "error");
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                showToast("Erreur de connexion", "error");
+                btn.disabled = false; btn.innerHTML = 'Créer mon accès';
             }
         }
 
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.style.position = 'fixed';
-            toast.style.top = '20px';
-            toast.style.right = '20px';
-            toast.style.padding = '1rem 1.5rem';
-            toast.style.borderRadius = '12px';
-            toast.style.background = type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)';
-            toast.style.color = 'white';
-            toast.style.fontWeight = '600';
-            toast.style.zIndex = '10000';
-            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
-            toast.style.display = 'flex';
-            toast.style.alignItems = 'center';
-            toast.style.gap = '10px';
-            toast.style.animation = 'slideInRight 0.4s ease-out';
-            
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
-            
+            toast.className = 'toast';
+            toast.style.background = type === 'success' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)';
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-triangle-exclamation'}"></i> ${message}`;
             document.body.appendChild(toast);
             setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.4s ease-in forwards';
+                toast.style.animation = 'slideOutRight 0.4s forwards';
                 setTimeout(() => toast.remove(), 400);
-            }, 4000);
+            }, 3000);
         }
-
-        // Fonction pour basculer la visibilité du mot de passe
-        function togglePassword(button) {
-            const input = button.parentElement.querySelector('input');
-            const icon = button.querySelector('i');
-            const inputBox = button.parentElement;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-                button.classList.add('active');
-                inputBox.classList.add('password-visible');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-                button.classList.remove('active');
-                inputBox.classList.remove('password-visible');
-            }
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-            @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
