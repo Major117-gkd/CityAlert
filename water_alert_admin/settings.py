@@ -23,8 +23,8 @@ env_path = BASE_DIR / ".env"
 if env_path.exists():
     load_dotenv(env_path)
 
-# Groq API Key - Récupérée depuis .env ou définie directement ici
-GROQ_API_KEY = os.getenv('GROQ_API_KEY', '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')
+# Groq API Key - Récupérée uniquement depuis .env
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 # Telegram Bot Token - Récupéré depuis .env ou défini directement ici
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
