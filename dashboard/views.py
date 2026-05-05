@@ -28,6 +28,12 @@ from django.core.mail import send_mail
 import math
 import uuid
 from django.core.cache import cache
+from .notifications import (
+    send_admin_notification, 
+    send_technician_notification, 
+    send_citizen_notification,
+    send_telegram_status_notification
+)
 
 # Add geocoding API to get address from coordinates
 def get_address_from_coordinates(lat, lon):
@@ -90,7 +96,7 @@ def landing(request):
     return render(request, 'dashboard/landing.html')
 
 
-def get_gemini_session():
+def get_ai_session():
     """Crée une session requests avec une stratégie de retentative robuste."""
     session = requests.Session()
     retry_strategy = Retry(
@@ -133,48 +139,35 @@ def get_local_assistant_response(message):
 
 @login_required
 @csrf_exempt
-def chat_with_gemini(request):
+def chat_with_ai(request):
+    """
+    Chatbot endpoint using Groq AI (Llama 3).
+    Renamed logically but keeping function name for URL compatibility.
+    """
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             user_message = data.get('message', '')
-            history = data.get('history', []) # Liste de messages précédents
+            history = data.get('history', []) 
             
             if not user_message:
                 return JsonResponse({'error': 'Message is required'}, status=400)
             
-            # Using Gemini API key from environment variable (set GEMINI_API_KEY)
-            gemini_api_key = os.getenv('GEMINI_API_KEY')
-            if not gemini_api_key:
-                # Tentative de récupération depuis settings au cas où
+            groq_api_key = os.getenv('GROQ_API_KEY')
+            if not groq_api_key:
                 from django.conf import settings
-                gemini_api_key = getattr(settings, 'GEMINI_API_KEY', None)
+                groq_api_key = getattr(settings, 'GROQ_API_KEY', None)
             
-            if not gemini_api_key:
-                # Simulation en l'absence de clé API Gemini
+            if not groq_api_key:
                 return JsonResponse({
-                    'response': f"[Simulation] Pas de clé Gemini configurée. Vous avez demandé : \"{user_message}\".\nPour une vraie réponse IA, définissez GEMINI_API_KEY dans vos variables d'environnement."
+                    'response': "Le service d'IA (Groq) n'est pas configuré. Veuillez contacter l'administrateur."
                 })
 
-            # Construction du payload avec historique et instruction système
-            # On limite l'historique aux 10 derniers messages pour éviter de saturer le contexte
-            formatted_history = []
-            for h in history[-10:]:
-                formatted_history.append({
-                    "role": h.get('role', 'user'),
-                    "parts": [{"text": h.get('text', '')}]
-                })
-            
-            # Ajouter le message actuel de l'utilisateur
-            formatted_history.append({
-                "role": "user",
-                "parts": [{"text": user_message}]
-            })
-
-            payload = {
-                "system_instruction": {
-                    "parts": [{
-                        "text": """Tu es un assistant IA d'élite nommé 'Assistant CityAlert'.
+            # Format messages for Groq (OpenAI format)
+            messages = [
+                {
+                    "role": "system",
+                    "content": """Tu es un assistant IA d'élite nommé 'Assistant CityAlert'.
 Ton rôle est d'aider les utilisateurs et les administrateurs du système CityAlert.
 Tu connais parfaitement la plateforme:
 - Elle gère 3 catégories d'incidents: EAU (fuites), ACCIDENTS (route), ÉLECTRICITÉ (pannes).
@@ -183,43 +176,49 @@ Tu connais parfaitement la plateforme:
 - Elle priorise la sécurité et la rapidité d'intervention.
 
 Sois professionnel, courtois, et concis dans tes réponses. Réponds toujours en français."""
-                    }]
-                },
-                "contents": formatted_history
+                }
+            ]
+            
+            # Add history
+            for h in history[-10:]:
+                role = "assistant" if h.get('role') == "model" else h.get('role', 'user')
+                messages.append({
+                    "role": role,
+                    "content": h.get('text', '')
+                })
+            
+            # Add current message
+            messages.append({"role": "user", "content": user_message})
+
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 1024
             }
 
-            models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
-            headers = {'Content-Type': 'application/json'}
-            session = get_gemini_session()
-            
-            for model_name in models_to_try:
-                url = f'https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_api_key}'
-                
-                try:
-                    response = session.post(url, json=payload, headers=headers, timeout=60)
-                    
-                    if response.status_code == 429:
-                        continue # Tentative avec le prochain modèle
-                    
-                    if response.status_code == 200:
-                        result = response.json()
-                        bot_response = result['candidates'][0]['content']['parts'][0]['text']
-                        return JsonResponse({'response': bot_response})
-                    
-                    print(f"Error with {model_name}: {response.text}")
-                    
-                except Exception as e:
-                    print(f"Connection error with {model_name}: {e}")
-                    continue
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=30)
+                if response.status_code == 200:
+                    result = response.json()
+                    bot_response = result['choices'][0]['message']['content']
+                    return JsonResponse({'response': bot_response})
+                else:
+                    print(f"Groq API Error: {response.status_code} - {response.text}")
+                    # Fallback to local
+                    local_response = get_local_assistant_response(user_message)
+                    if local_response:
+                        return JsonResponse({'response': f"[Mode Secours] {local_response}"})
+                    return JsonResponse({'response': "Erreur lors de la communication avec l'IA."}, status=500)
+            except Exception as e:
+                print(f"Request error: {e}")
+                return JsonResponse({'response': "Le service d'IA est temporairement indisponible."})
 
-            # Fallback final : Cerveau Local
-            local_response = get_local_assistant_response(user_message)
-            if local_response:
-                return JsonResponse({'response': f"[Mode Secours] {local_response}"})
-
-            return JsonResponse({
-                'response': "Désolé, mes services d'intelligence artificielle sont actuellement très sollicités. [Mode Secours] Je reste disponible pour vous aider manuellement sur la plateforme. Que puis-je faire pour vous ?"
-            })
         except Exception as e:
             return JsonResponse({'response': f"Erreur système: {str(e)}"})
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -229,16 +228,20 @@ def incident_list(request, category=None):
     incidents = Incident.objects.all().order_by('-timestamp')
     if category:
         # Map URL slug to DB categories (flexible matching)
-        cat_map = {
-            'eau': ['Eau', 'Fuite'],
-            'accident': ['Accident', 'Route', 'Routier'],
-            'electricite': ['Electricité', 'Électricité', 'Elec', 'Circuit']
-        }
-        variants = cat_map.get(category.lower(), [category])
-        query = Q()
-        for v in variants:
-            query |= Q(category__icontains=v)
-        incidents = incidents.filter(query)
+        if category.lower() == 'telegram':
+            # Filtrage par source (catégorie Telegram OU présence d'un ID utilisateur Telegram)
+            incidents = incidents.filter(Q(category='Telegram') | Q(user_id__isnull=False))
+        else:
+            cat_map = {
+                'eau': ['Eau', 'Fuite'],
+                'accident': ['Accident', 'Route', 'Routier'],
+                'electricite': ['Electricité', 'Électricité', 'Elec', 'Circuit']
+            }
+            variants = cat_map.get(category.lower(), [category])
+            query = Q()
+            for v in variants:
+                query |= Q(category__icontains=v)
+            incidents = incidents.filter(query)
     return render(request, 'dashboard/incidents.html', {'incidents': incidents, 'category': category})
 
 @login_required
@@ -706,17 +709,37 @@ def analytics_view(request):
     # Données pour les graphiques
     severity_data = list(incidents.values('severity').annotate(count=Count('severity')))
     category_data = list(incidents.values('category').annotate(count=Count('category')))
-    status_data = list(incidents.values('status').annotate(count=Count('status')))
     
-    # Tendance des 7 derniers jours
-    last_7_days = timezone.now() - timedelta(days=7)
-    daily_trends = incidents.filter(timestamp__gte=last_7_days).extra(
+    # Normalisation des statuts
+    status_counts = incidents.values('status').annotate(count=Count('status'))
+    status_map = {'Signalé': 0, 'En cours': 0, 'Réparé': 0}
+    for s in status_counts:
+        status_name = s['status']
+        if not status_name: continue
+        if 'signal' in status_name.lower(): status_map['Signalé'] += s['count']
+        elif 'cours' in status_name.lower() or 'traitement' in status_name.lower(): status_map['En cours'] += s['count']
+        elif any(x in status_name.lower() for x in ['répar', 'résolu', 'clos']): status_map['Réparé'] += s['count']
+        else: status_map['Signalé'] += s['count']
+    
+    status_data = [{'status': k, 'count': v} for k, v in status_map.items() if v > 0]
+
+    # Tendance 7 jours avec remplissage
+    today = timezone.now().date()
+    days_list = [(today - timedelta(days=i)) for i in range(6, -1, -1)]
+    trend_dict = {d: 0 for d in days_list}
+    
+    last_7_days = timezone.now().date() - timedelta(days=7)
+    daily_trends = incidents.filter(timestamp__date__gte=last_7_days).extra(
         select={'day': "date(timestamp)"}
-    ).values('day').annotate(count=Count('id')).order_by('day')
+    ).values('day').annotate(count=Count('id'))
     
-    # Formatage des dates au format ISO pour JSON
-    trend_labels = [str(item['day']) for item in daily_trends]
-    trend_data = [item['count'] for item in daily_trends]
+    for d in daily_trends:
+        day_date = d['day'] if hasattr(d['day'], 'strftime') else d['day']
+        if day_date in trend_dict:
+            trend_dict[day_date] = d['count']
+            
+    trend_labels = [d.strftime('%d/%m') for d in days_list]
+    trend_values = [trend_dict[d] for d in days_list]
 
     context = {
         'total_incidents': total_incidents,
@@ -725,7 +748,7 @@ def analytics_view(request):
         'category_data_json': json.dumps(category_data),
         'status_data_json': json.dumps(status_data),
         'trend_labels_json': json.dumps(trend_labels),
-        'trend_data_json': json.dumps(trend_data),
+        'trend_data_json': json.dumps(trend_values),
     }
     return render(request, 'dashboard/analytics.html', context)
 
@@ -737,21 +760,54 @@ def dashboard_index(request):
     water = incidents.filter(category='Eau').count()
     accidents = incidents.filter(category__icontains='accident').count()
     electric = incidents.filter(category__icontains='lectricit').count()
-    telegram = incidents.filter(category='Telegram').count()
+    # Compteur de SOURCE : tous les incidents venant de Telegram
+    telegram = incidents.filter(Q(category='Telegram') | Q(user_id__isnull=False)).count()
     
     status_counts = incidents.values('status').annotate(count=Count('status'))
     severity_counts = incidents.values('severity').annotate(count=Count('severity'))
     
-    last_7_days = timezone.now() - timedelta(days=7)
-    daily_trends = incidents.filter(timestamp__gte=last_7_days).extra(
+    last_7_days = timezone.now().date() - timedelta(days=7)
+    daily_trends = incidents.filter(timestamp__date__gte=last_7_days).extra(
         select={'day': "date(timestamp)"}
     ).values('day').annotate(count=Count('id')).order_by('day')
+
+    # Normalisation des statuts pour éviter les doublons dans le graphique
+    status_map = {
+        'Signalé': 0,
+        'En cours': 0,
+        'Réparé': 0
+    }
+    for s in status_counts:
+        status_name = s['status']
+        if not status_name: continue
+        # Mapping flexible
+        if 'signal' in status_name.lower():
+            status_map['Signalé'] += s['count']
+        elif 'cours' in status_name.lower() or 'traitement' in status_name.lower():
+            status_map['En cours'] += s['count']
+        elif any(x in status_name.lower() for x in ['répar', 'résolu', 'clos']):
+            status_map['Réparé'] += s['count']
+        else:
+            # Par défaut on ajoute à Signalé ou on ignore
+            status_map['Signalé'] += s['count']
+    
+    status_list = [{'status': k, 'count': v} for k, v in status_map.items() if v > 0]
+
+    # Tendance des 7 derniers jours avec remplissage des jours vides
+    today = timezone.now().date()
+    days_list = [(today - timedelta(days=i)) for i in range(6, -1, -1)]
+    
+    trend_dict = {d: 0 for d in days_list}
+    for d in daily_trends:
+        day_date = d['day'] if hasattr(d['day'], 'strftime') else d['day']
+        if day_date in trend_dict:
+            trend_dict[day_date] = d['count']
     
     trend_list = []
-    for d in daily_trends:
+    for day, count in trend_dict.items():
         trend_list.append({
-            'day': d['day'].strftime('%d/%m') if hasattr(d['day'], 'strftime') else str(d['day']),
-            'count': d['count']
+            'day': day.strftime('%d/%m'),
+            'count': count
         })
     
     context = {
@@ -766,7 +822,7 @@ def dashboard_index(request):
             'electric': electric,
             'telegram': telegram,
         },
-        'status_data': list(status_counts),
+        'status_data': status_list,
         'severity_data': list(severity_counts),
         'trend_data': trend_list,
     }
@@ -793,11 +849,19 @@ def dashboard_index(request):
         return render(request, 'dashboard/user_index.html', user_context)
 
 from django.contrib.auth import login, authenticate
+from django.views.decorators.csrf import csrf_protect, get_token
+from django.utils.decorators import method_decorator
 
+@method_decorator(csrf_protect, name='dispatch')
 class DashboardLoginView(LoginView):
     template_name = 'dashboard/login.html'
     redirect_authenticated_user = False
     success_url = reverse_lazy('dashboard:dashboard_index')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['csrf_token'] = get_token(self.request)
+        return context
 
     def form_valid(self, form):
         remember_me = self.request.POST.get('remember_me')
@@ -932,70 +996,7 @@ def send_incident_email(request, pk):
 
 from django.conf import settings
 
-def send_admin_notification(incident, distance=None):
-    """Envoie un mail de notification à l'administrateur configuré."""
-    subject = f"ALERTE : Nouveau Signalement [{incident.category}] - {incident.address}"
-    
-    context = {
-        'incident': incident,
-        'distance': round(distance, 2) if distance and distance != float('inf') else None
-    }
-    html_message = render_to_string('dashboard/email_notification.html', context)
-    plain_message = strip_tags(html_message)
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to_email = [getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', 'setiennetol2004@gmail.com')]
-    
-    try:
-        send_mail(subject, plain_message, from_email, to_email, html_message=html_message)
-        return True
-    except Exception as e:
-        print(f"Erreur d'envoi mail admin: {e}")
-
-def send_technician_notification(incident, technician, distance):
-    """Envoie un ordre de mission au technicien assigné."""
-    if not technician.email:
-        return False
-        
-    subject = f"ORDRE DE MISSION : {incident.category} à {incident.address}"
-    
-    context = {
-        'incident': incident,
-        'technician': technician,
-        'distance': round(distance, 2) if distance else 0
-    }
-    html_message = render_to_string('dashboard/email_technician.html', context)
-    plain_message = f"Bonjour {technician.name}, vous avez une nouvelle mission : {incident.category} à {incident.address}."
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to_email = [technician.email]
-    
-    try:
-        send_mail(subject, plain_message, from_email, to_email, html_message=html_message)
-        return True
-    except Exception as e:
-        print(f"Erreur d'envoi mail technicien: {e}")
-        return False
-
-def send_citizen_notification(incident):
-    """Envoie un mail de confirmation au citoyen qui a fait le signalement."""
-    if not incident.user_email:
-        return False
-        
-    subject = f"CONFIRMATION : Signalement #{incident.id} reçu - CityAlert"
-    
-    context = {
-        'incident': incident,
-    }
-    html_message = render_to_string('dashboard/email_citizen.html', context)
-    plain_message = f"Bonjour, nous avons bien reçu votre signalement #{incident.id} ({incident.category}). Merci pour votre aide."
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to_email = [incident.user_email]
-    
-    try:
-        send_mail(subject, plain_message, from_email, to_email, html_message=html_message)
-        return True
-    except Exception as e:
-        print(f"Erreur d'envoi mail citoyen: {e}")
-        return False
+# Les fonctions de notification ont été déplacées vers notifications.py
 
 class DashboardLogoutView(LogoutView):
     def get(self, request, *args, **kwargs):
@@ -1045,11 +1046,11 @@ def update_incident(request, pk):
         if old_status != incident.status:
             try:
                 telegram_user = TelegramUser.objects.get(user__username=incident.user_name)
-                send_telegram_status_update_notification(
+                send_telegram_status_notification(
                     telegram_user.telegram_id, 
-                    incident, 
-                    old_status, 
-                    incident.status
+                    incident.id, 
+                    incident.status,
+                    settings.TELEGRAM_BOT_TOKEN
                 )
             except TelegramUser.DoesNotExist:
                 pass
@@ -1083,163 +1084,142 @@ def register_view(request):
 @csrf_exempt
 @login_required
 def transcribe_audio(request):
-    """Transcrit un fichier audio en texte en utilisant Gemini."""
+    """Transcrit un fichier audio en texte en utilisant Groq Whisper."""
     if request.method == 'POST' and request.FILES.get('audio'):
         try:
             audio_file = request.FILES['audio']
             
             from django.conf import settings
-            gemini_api_key = getattr(settings, 'GEMINI_API_KEY', None)
+            groq_api_key = getattr(settings, 'GROQ_API_KEY', None)
             
-            if not gemini_api_key:
-                # Simulation de transcription si la clé n'est pas configurée
-                return JsonResponse({'status': 'success', 'transcript': 'Transcription simulée (clé Gemini absente).'} )
+            if not groq_api_key:
+                return JsonResponse({'status': 'success', 'transcript': 'Transcription simulée (clé Groq absente).'} )
 
-            # Gemini 2.0+ supporte l'envoi d'audio directement
-            import base64
-            audio_data = base64.b64encode(audio_file.read()).decode('utf-8')
-            
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}'
-            
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": "Transcris cet audio en texte français. Réponds uniquement avec la transcription, sans aucun autre texte."},
-                        {"inlineData": {"mimeType": "audio/wav", "data": audio_data}}
-                    ]
-                }]
+            url = "https://api.groq.com/openai/v1/audio/transcriptions"
+            headers = {
+                "Authorization": f"Bearer {groq_api_key}"
             }
             
-            session = get_gemini_session()
-            response = session.post(url, json=payload, timeout=60)
+            files = {
+                'file': (audio_file.name, audio_file.read(), audio_file.content_type),
+                'model': (None, 'whisper-large-v3'),
+                'language': (None, 'fr'),
+                'response_format': (None, 'json')
+            }
             
-            if response.status_code == 429:
-                return JsonResponse({
-                    'status': 'success',
-                    'transcript': "Note : Service saturé. Transcription simulée : [Message vocal reçu]"
-                })
-
+            session = get_ai_session()
+            response = session.post(url, headers=headers, files=files, timeout=60)
+            
             if response.status_code == 200:
                 result = response.json()
-                try:
-                    transcript = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                    return JsonResponse({'status': 'success', 'transcript': transcript})
-                except (KeyError, IndexError):
-                    return JsonResponse({'status': 'error', 'message': 'Format de réponse invalide'}, status=500)
+                transcript = result.get('text', '').strip()
+                return JsonResponse({'status': 'success', 'transcript': transcript})
             else:
-                return JsonResponse({'status': 'error', 'message': f'Erreur API Gemini: {response.status_code}'}, status=500)
+                print(f"Groq Whisper Error: {response.status_code} - {response.text}")
+                return JsonResponse({'status': 'error', 'message': f'Erreur API Groq: {response.status_code}'}, status=500)
+                
+        except Exception as e:
+            print(f"Transcription error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
                 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
             
     return JsonResponse({'status': 'error', 'message': 'Requête invalide'}, status=400)
 
-def _analyze_image_gemini(image_file):
-    """Analyse une image via Gemini et retourne un dict de résultats."""
+def _analyze_image_groq(image_file):
+    """Analyse une image via Groq et retourne un dict de résultats."""
     import base64
     import io
     from PIL import Image
     from django.conf import settings
 
     mime_type = "image/jpeg"
-    # Encode l'image en base64 pour l'API Gemini avec COMPRESSION PRÉALABLE
-    # Réduit la taille pour éviter l'erreur ConnectionAbortedError (10053) sur Windows
+    # Compression et encodage base64
     try:
         img = Image.open(image_file)
-        # Convertir en RGB si nécessaire (pour PNG/RGBA)
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
         
-        # Redimensionnement si trop grand (max 1024px de côté)
         max_size = 1024
         if max(img.size) > max_size:
             img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
         
-        # Compression en mémoire
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=75)
         image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
         print(f"Image compression error: {e}")
-        # En cas d'erreur de compression, on tente la lecture brute par sécurité
         image_file.seek(0)
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
-        # On récupère le vrai mime_type du fichier en secours
-        mime_type = getattr(image_file, 'content_type', 'image/jpeg')
     
     image_file.seek(0)
 
-    gemini_api_key = getattr(settings, 'GEMINI_API_KEY', None)
-    if not gemini_api_key:
+    groq_api_key = getattr(settings, 'GROQ_API_KEY', None)
+    if not groq_api_key:
         return {'status': 'error', 'message': 'Configuration IA incomplète (Clé API absente).'}
 
-    prompt = f"""
+    prompt = """
     Tu es un modèle de vision IA qui analyse des photos d'incidents urbains.
     Analyse cette photo pour détecter le type d'incident (Eau, Accident, Électricité, ou Autre).
     Indique si la photo montre un vrai incident et donne un avis court.
 
     Réponds UNIQUEMENT en JSON strict, sans texte supplémentaire :
-    {{
+    {
         "is_valid": true,
         "detected_category": "Eau",
         "ai_comment": "Description courte et précise de ce que tu vois",
         "suggested_severity": "Moyenne"
-    }}
+    }
     """
 
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {groq_api_key}",
+        "Content-Type": "application/json"
+    }
+    
     payload = {
-        "contents": [{
-            "parts": [
-                {"text": prompt},
-                {"inlineData": {"mimeType": mime_type, "data": image_data}}
-            ]
-        }]
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image_data}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.1
     }
 
-    models_to_try = [
-        "gemini-2.0-flash",
-        "gemini-1.5-flash"
-    ]
-
-    last_error_msg = "Le service d'analyse IA est actuellement saturé."
-    
-    for model_name in models_to_try:
-        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_api_key}'
+    try:
+        session = get_ai_session()
+        response = session.post(url, json=payload, timeout=30)
         
-        try:
-            response = requests.post(url, json=payload, timeout=30)
-            
-            if response.status_code == 429:
-                last_error_msg = f"Quota atteint pour {model_name}. Tentative avec le modèle suivant..."
-                continue # Essayer le prochain modèle
-            
-            if response.status_code != 200:
-                print(f"Gemini API Error ({model_name}): {response.text}")
-                return {'status': 'error', 'message': f'Erreur API Gemini ({response.status_code})'}
-
+        if response.status_code == 200:
             result = response.json()
-            content = result['candidates'][0]['content']['parts'][0]['text']
-            
-            # Nettoyage des blocs de code Markdown
-            if content.startswith('```json'):
-                content = content.replace('```json', '', 1).replace('```', '', 1).strip()
-            elif content.startswith('```'):
-                content = content.replace('```', '', 2).strip()
-                
+            content = result['choices'][0]['message']['content']
             data = json.loads(content)
             data['status'] = 'success'
-            data['model_used'] = model_name
+            data['model_used'] = "llama-3.2-11b-vision"
             return data
+        else:
+            print(f"Groq API Error: {response.status_code} - {response.text}")
+            return {'status': 'error', 'message': f'Erreur API Groq ({response.status_code})'}
             
-        except Exception as e:
-            print(f"Error calling {model_name}: {e}")
-            continue
-
-    # Si on arrive ici, tous les modèles ont échoué
-    return {
-        'status': 'error',
-        'message': "Le service d'analyse IA est saturé sur tous les modèles disponibles. Veuillez remplir le formulaire manuellement."
-    }
+    except Exception as e:
+        print(f"Error calling Groq: {e}")
+        return {
+            'status': 'error',
+            'message': f"Erreur lors de l'analyse IA: {str(e)}"
+        }
 
 
 @csrf_exempt
@@ -1257,7 +1237,8 @@ def analyze_incident_api(request):
                 return JsonResponse({'status': 'error', 'message': 'Une photo est obligatoire.'}, status=400)
 
             # Analyse de l'image (vérifie que c'est un incident réel)
-            analysis = _analyze_image_gemini(image_file)
+            # Analyse de l'image via Groq
+            analysis = _analyze_image_groq(image_file)
             if analysis.get('status') != 'success':
                 return JsonResponse({'status': 'error', 'message': analysis.get('message', 'Erreur d\'analyse IA.')}, status=500)
 
@@ -1367,6 +1348,7 @@ def latest_incidents_api(request):
         'water': all_incs.filter(category='Eau').count(),
         'accidents': all_incs.filter(category__icontains='accident').count(),
         'electric': all_incs.filter(category__icontains='lectricit').count(),
+        'telegram': all_incs.filter(Q(category='Telegram') | Q(user_id__isnull=False)).count(),
     }
     
     return JsonResponse({
@@ -1691,10 +1673,11 @@ def handle_telegram_incident(chat_id, telegram_id, text, message):
         if latitude and longitude:
             address = get_address_from_coordinates(latitude, longitude)
         
-        # Créer l'incident avec type "Telegram"
+        # Créer l'incident avec type "Telegram" et enregistrer l'ID user
         logger.info(f"Création incident Telegram pour user: {user.username}, text: {text}")
         incident = Incident.objects.create(
             category='Telegram',  # Type spécial pour incidents Telegram
+            user_id=telegram_user.telegram_id, # Enregistre la source Telegram
             address=text,  # Utiliser address au lieu de description
             user_name=user.username,
             user_email=user.email,

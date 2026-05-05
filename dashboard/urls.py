@@ -17,7 +17,7 @@ urlpatterns = [
     # Vue principale du tableau de bord (après connexion)
     path('dashboard/', views.dashboard_index, name='dashboard_index'),
     path('logout/', views.DashboardLogoutView.as_view(), name='logout'),
-    path('chat/', views.chat_with_gemini, name='chat_with_gemini'),
+    path('chat/', views.chat_with_ai, name='chat_with_ai'),
     path('notify-email/<int:pk>/', views.send_incident_email, name='send_incident_email'),
     
     # Generic incident list

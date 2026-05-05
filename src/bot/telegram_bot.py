@@ -12,6 +12,7 @@ from telegram.ext import (
     filters,
 )
 from telegram.request import HTTPXRequest
+from asgiref.sync import sync_to_async
 from dotenv import load_dotenv
 
 # Specific fix for Windows asyncio issues with python-telegram-bot/httpx
@@ -20,9 +21,23 @@ if sys.platform == 'win32':
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from database.db_manager import DBManager
+# Add project root and src to path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(PROJECT_ROOT)
+sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
+
+# Setup Django
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'water_alert_admin.settings')
+django.setup()
+
+from dashboard.models import Incident, Technician
+from dashboard.notifications import (
+    send_admin_notification, 
+    send_technician_notification, 
+    send_citizen_notification
+)
+from dashboard.utils import find_closest_technician
 from utils.geocoder import get_address
 from utils.ai_analyzer import analyze_leak_image
 
@@ -37,7 +52,8 @@ logging.basicConfig(
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 PHOTO, SEVERITY, LOCATION = range(3)
 
-db = DBManager()
+# Keep for legacy/utility if needed, but we'll use Django ORM
+# db = DBManager()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_chat_action("typing")
@@ -74,7 +90,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = (
         "🌍 **À propos de CityAlert**\n\n"
         "CityAlert est une initiative citoyenne et technologique visant à signaler les incidents urbains (fuites, pannes électriques, accidents). "
-        "Grâce à l'Intelligence Artificielle de Google Gemini, nous traitons vos signalements en temps réel "
+        "Grâce à l'Intelligence Artificielle de Groq AI, nous traitons vos signalements en temps réel "
         "pour prioriser les interventions d'urgence.\n\n"
         "📡 **Technologie** : Python, FastAPI, Django, IA Vision.\n"
         "🤝 **Partenariat** : Collaboration avec les services techniques municipaux."
@@ -108,10 +124,12 @@ async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = update.message.from_user
     photo_file = await update.message.photo[-1].get_file()
     
-    os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{user.id}_{photo_file.file_unique_id}.jpg"
+    os.makedirs("media/incidents", exist_ok=True)
+    filename = f"{user.id}_{photo_file.file_unique_id}.jpg"
+    file_path = f"media/incidents/{filename}"
     await photo_file.download_to_drive(file_path)
-    context.user_data['photo_path'] = file_path
+    # Store the relative path for Django ImageField compatibility
+    context.user_data['photo_path'] = f"incidents/{filename}"
     
     await update.message.reply_chat_action("typing")
     await update.message.reply_text("🔍 *Analyse IA en cours... Merci de patienter.*", parse_mode='Markdown')
@@ -159,43 +177,102 @@ async def severity_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
     return LOCATION
 
-async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user = update.message.from_user
-    user_location = update.message.location
-    
-    photo_path = context.user_data.get('photo_path')
-    severity = context.user_data.get('user_severity', 'Inconnue')
-    ai_severity = context.user_data.get('ai_severity', 'Inconnue')
-    category = context.user_data.get('category', 'Eau')
-    
-    await update.message.reply_chat_action("find_location")
-    address = get_address(user_location.latitude, user_location.longitude)
-    
-    db.add_incident(
-        user_id=user.id,
-        user_name=user.full_name,
-        image_path=photo_path,
-        category=category,
-        latitude=user_location.latitude,
-        longitude=user_location.longitude,
-        address=address,
-        severity=severity,
-        ai_severity=ai_severity
-    )
-    
+async def location_missing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_chat_action("typing")
-    reply_keyboard = [["🆕 Nouveau signalement"], ["📊 Mes signalements"]]
-    
     await update.message.reply_text(
-        f"✅ **Signalement validé !**\n\n"
-        f"📍 Adresse : _{address}_\n"
-        "Nos services ont été alertés. Merci pour votre engagement citoyen ! 🚀",
-        parse_mode='Markdown',
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
-        )
+        "⚠️ **Action requise :** Veuillez envoyer votre **localisation GPS** en utilisant l'icône 📎 (ou trombone) puis 'Localisation'.\n\n"
+        "C'est nécessaire pour que nos services puissent intervenir précisément.",
+        parse_mode='Markdown'
     )
-    return ConversationHandler.END
+    return LOCATION
+
+async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    try:
+        user = update.message.from_user
+        user_location = update.message.location
+        
+        print(f"DEBUG: Réception localisation de {user.id}")
+        
+        photo_path = context.user_data.get('photo_path')
+        severity = context.user_data.get('user_severity', 'Inconnue')
+        ai_severity = context.user_data.get('ai_severity', 'Inconnue')
+        category = context.user_data.get('category', 'Eau')
+        
+        await update.message.reply_chat_action("find_location")
+        
+        try:
+            print("DEBUG: Début géocodage")
+            address = get_address(user_location.latitude, user_location.longitude)
+            print(f"DEBUG: Géocodage réussi: {address}")
+        except Exception as ge:
+            print(f"DEBUG: Erreur géocodage: {ge}")
+            address = "Localisation GPS (adresse indisponible)"
+
+        # Création de l'incident via Django ORM
+        import threading
+        
+        try:
+            print("DEBUG: Création incident Django")
+            # Wrap synchronous ORM call in sync_to_async
+            incident = await sync_to_async(Incident.objects.create)(
+                user_id=user.id,
+                user_name=user.full_name,
+                image=photo_path,
+                category=category,
+                latitude=user_location.latitude,
+                longitude=user_location.longitude,
+                address=address,
+                severity=severity,
+                ai_severity=ai_severity,
+                status='Signalé'
+            )
+            print(f"DEBUG: Incident créé ID={incident.id}")
+        except Exception as de:
+            print(f"DEBUG: Erreur création Django: {de}")
+            raise de
+        
+        # Notifications
+        try:
+            print("DEBUG: Recherche technicien")
+            # Wrap synchronous utility call in sync_to_async
+            closest_tech, distance = await sync_to_async(find_closest_technician)(incident)
+            
+            if closest_tech:
+                print(f"DEBUG: Technicien trouvé: {closest_tech.name}")
+                incident.assigned_technician = closest_tech
+                # Wrap synchronous save call in sync_to_async
+                await sync_to_async(incident.save)()
+                
+                # Send notifications (keep as threads or move to sync_to_async)
+                # Since notifications are IO-bound (email), sync_to_async is better than manual threads
+                await sync_to_async(send_technician_notification)(incident, closest_tech, distance)
+            
+            print("DEBUG: Envoi notification Admin")
+            await sync_to_async(send_admin_notification)(incident, distance)
+        except Exception as ne:
+            print(f"DEBUG: Erreur notifications: {ne}")
+
+        await update.message.reply_chat_action("typing")
+        reply_keyboard = [["🆕 Nouveau signalement"], ["📊 Mes signalements"]]
+        
+        await update.message.reply_text(
+            f"✅ **Signalement validé !**\n\n"
+            f"📍 Adresse : _{address}_\n"
+            "Nos services ont été alertés. Merci pour votre aide ! 🚀",
+            parse_mode='Markdown',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            )
+        )
+        print("DEBUG: Fin handler location (succès)")
+        return ConversationHandler.END
+        
+    except Exception as e:
+        logging.error(f"Erreur critique dans location handler: {e}")
+        import traceback
+        print(traceback.format_exc())
+        await update.message.reply_text("❌ Une erreur est survenue lors de l'enregistrement. Veuillez réessayer avec /start.")
+        return ConversationHandler.END
 
 async def send_status_notification(user_id, leak_id, new_status):
     """Function to be called from the dashboard to notify users."""
@@ -228,16 +305,20 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_chat_action("typing")
     user = update.message.from_user
-    incidents = db.get_user_incidents(user.id)
+    # Wrap synchronous filter and exists calls in sync_to_async
+    incidents_queryset = Incident.objects.filter(user_id=user.id).order_by('-timestamp')
+    has_incidents = await sync_to_async(incidents_queryset.exists)()
     
-    if not incidents:
+    if not has_incidents:
         await update.message.reply_text("Vous n'avez aucun signalement actif. Utilisez /start pour agir !")
         return ConversationHandler.END
         
+    # We need to list the incidents, so we also need to wrap the evaluation of the queryset
+    incidents_list = await sync_to_async(list)(incidents_queryset[:10])
+    
     response = "📊 **Vos signalements :**\n\n"
-    for inc in incidents:
-        id_inc, cat, addr, sev, stat, date = inc
-        response += f"🆔 `#{id_inc}` | {cat} | {stat}\n📍 {addr[:40]}...\n⚠️ {sev}\n---\n"
+    for inc in incidents_list:
+        response += f"🆔 `#{inc.id}` | {inc.category} | {inc.status}\n📍 {inc.address[:40]}...\n⚠️ {inc.severity}\n---\n"
     
     await update.message.reply_text(response, parse_mode='Markdown')
     return ConversationHandler.END
@@ -290,7 +371,10 @@ if __name__ == '__main__':
         states={
             PHOTO: [MessageHandler(filters.PHOTO, photo)],
             SEVERITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, severity_choice)],
-            LOCATION: [MessageHandler(filters.LOCATION, location)],
+            LOCATION: [
+                MessageHandler(filters.LOCATION, location),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, location_missing)
+            ],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True

@@ -6,81 +6,346 @@
 
 {% block extra_css %}
 <style>
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
-    .metric-card { 
-        padding: 1.25rem; 
-        display: flex; 
-        align-items: center; 
-        gap: 1rem; 
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-        background: var(--card-bg);
+    /* ===== NEXT-GEN DASHBOARD DESIGN ===== */
+    @property --angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
     }
-    
-    .metric-card:hover.total { border-color: rgba(255,255,255,0.4); box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
-    .metric-card:hover.water { border-color: var(--accent-blue); box-shadow: 0 10px 30px rgba(0, 240, 255, 0.2); }
-    .metric-card:hover.accident { border-color: var(--accent-red); box-shadow: 0 10px 30px rgba(255, 0, 85, 0.2); }
-    .metric-card:hover.electric { border-color: var(--accent-yellow); box-shadow: 0 10px 30px rgba(255, 184, 0, 0.2); }
-    
-    .metric-icon-box { 
-        width: 45px; height: 45px; border-radius: 12px; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 1.25rem; 
-        transition: 0.4s;
+
+    @keyframes rotateBorder {
+        to {
+            --angle: 360deg;
+        }
     }
-    
-    .total .metric-icon-box { background: rgba(148, 163, 184, 0.1); color: var(--text-main); }
-    .water .metric-icon-box { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); }
-    .accident .metric-icon-box { background: rgba(255, 0, 85, 0.1); color: var(--accent-red); }
-    .electric .metric-icon-box { background: rgba(255, 184, 0, 0.1); color: var(--accent-yellow); }
 
-    .metric-value { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; line-height: 1.2; }
-    .metric-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    @keyframes cardEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(24px) scale(0.96);
+        }
 
-    .dashboard-grid { display: grid; grid-template-columns: 2.5fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
-    .map-container { padding: 1rem; border-radius: 12px; }
-    #map { height: 420px; width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
 
-    /* New Animated Data Rows for Incidents */
-    .report-card { 
-        background: var(--card-bg); 
-        border-radius: 8px; 
-        padding: 0.85rem; 
-        margin-bottom: 0.6rem; 
-        display: flex; 
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    @keyframes pulseGlow {
+
+        0%,
+        100% {
+            opacity: 0.6;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    @keyframes floatY {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    /* --- Metric Cards Grid --- */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        padding: 1.5rem 1.25rem;
+        display: flex;
         align-items: center;
-        gap: 1rem; 
-        transition: 0.2s; 
-        border-left: 3px solid transparent;
-    }
-    .report-card:hover { 
-        background: rgba(255,255,255,0.06); 
-        border-left-color: var(--accent-blue);
-    }
-
-    .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .badge-eau { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); border: 1px solid rgba(0,240,255,0.2); }
-    .badge-accident { background: rgba(255, 0, 85, 0.1); color: var(--accent-red); border: 1px solid rgba(255,0,85,0.2); }
-    .badge-electricite { background: rgba(255, 184, 0, 0.1); color: var(--accent-yellow); border: 1px solid rgba(255,184,0,0.2); }
-    .badge-telegram { background: rgba(0, 230, 118, 0.1); color: var(--success); border: 1px solid rgba(0,230,118,0.2); }
-
-    .map-container { position: relative; }
-    
-    .map-legend {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        z-index: 1000;
+        gap: 1rem;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         background: var(--card-bg);
-        -webkit-backdrop-filter: var(--glass-blur);
-        backdrop-filter: var(--glass-blur);
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        animation: cardEntrance 0.6s ease-out both;
+    }
+
+    .metric-card:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .metric-card:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .metric-card:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .metric-card:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    .metric-card:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+    /* Animated gradient border on hover */
+    .metric-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 1.5px;
+        background: conic-gradient(from var(--angle), transparent 40%, var(--card-accent, var(--accent-blue)) 50%, transparent 60%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.5s;
+        animation: rotateBorder 4s linear infinite;
+    }
+
+    .metric-card:hover::after {
+        opacity: 1;
+    }
+
+    /* Scan-line sweep on cards */
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+        transform: skewX(-20deg);
+        transition: 0.8s;
+        z-index: 1;
+    }
+
+    .metric-card:hover::before {
+        left: 150%;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-6px) scale(1.02);
+    }
+
+    .metric-card:hover.total {
+        box-shadow: 0 15px 40px rgba(148, 163, 184, 0.15);
+        --card-accent: #94a3b8;
+    }
+
+    .metric-card:hover.water {
+        box-shadow: 0 15px 40px rgba(0, 240, 255, 0.2), 0 0 40px rgba(0, 240, 255, 0.08);
+        --card-accent: #00f0ff;
+    }
+
+    .metric-card:hover.accident {
+        box-shadow: 0 15px 40px rgba(255, 0, 85, 0.2), 0 0 40px rgba(255, 0, 85, 0.08);
+        --card-accent: #ff0055;
+    }
+
+    .metric-card:hover.electric {
+        box-shadow: 0 15px 40px rgba(255, 184, 0, 0.2), 0 0 40px rgba(255, 184, 0, 0.08);
+        --card-accent: #ffb800;
+    }
+
+    .metric-card:hover.telegram {
+        box-shadow: 0 15px 40px rgba(0, 230, 118, 0.2), 0 0 40px rgba(0, 230, 118, 0.08);
+        --card-accent: #00e676;
+    }
+
+    .metric-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 2;
+    }
+
+    .metric-card:hover .metric-icon-box {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    .total .metric-icon-box {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--text-main);
+    }
+
+    .water .metric-icon-box {
+        background: rgba(0, 240, 255, 0.12);
+        color: var(--accent-blue);
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+    }
+
+    .accident .metric-icon-box {
+        background: rgba(255, 0, 85, 0.12);
+        color: var(--accent-red);
+        box-shadow: 0 0 20px rgba(255, 0, 85, 0.1);
+    }
+
+    .electric .metric-icon-box {
+        background: rgba(255, 184, 0, 0.12);
+        color: var(--accent-yellow);
+        box-shadow: 0 0 20px rgba(255, 184, 0, 0.1);
+    }
+
+    .telegram .metric-icon-box {
+        background: rgba(0, 230, 118, 0.12);
+        color: var(--success);
+        box-shadow: 0 0 20px rgba(0, 230, 118, 0.1);
+    }
+
+    .metric-content {
+        width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        position: relative;
+        z-index: 2;
     }
-    
+
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        background: linear-gradient(135deg, var(--text-main), var(--text-muted));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .water .metric-value {
+        background: linear-gradient(135deg, #00f0ff, #0088ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
+    .accident .metric-value {
+        background: linear-gradient(135deg, #ff0055, #ff3366);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
+    .electric .metric-value {
+        background: linear-gradient(135deg, #ffb800, #ff8c00);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
+    .telegram .metric-value {
+        background: linear-gradient(135deg, #00e676, #00c853);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+
+    .metric-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 2px;
+    }
+
+    .metric-card.telegram {
+        background: linear-gradient(135deg, rgba(0, 230, 118, 0.06), rgba(0, 230, 118, 0.02));
+        border-color: rgba(0, 230, 118, 0.15);
+    }
+
+    /* --- Dashboard Main Grid --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2.5fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    /* --- Map Container --- */
+    .map-container {
+        padding: 1.25rem;
+        border-radius: 20px;
+        position: relative;
+        animation: cardEntrance 0.6s ease-out 0.3s both;
+    }
+
+    .map-container:hover {
+        transform: translateY(-4px);
+    }
+
+    .map-wrapper {
+        position: relative;
+    }
+
+    #map {
+        height: 420px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: border-color 0.3s;
+    }
+
+    .map-container:hover #map {
+        border-color: rgba(0, 240, 255, 0.3);
+    }
+
+    .map-vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1000;
+        box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.4);
+        border-radius: 12px;
+    }
+
+    .dark-theme .map-vignette {
+        box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
+    }
+
+    .map-legend {
+        position: absolute;
+        bottom: 30px;
+        left: 30px;
+        z-index: 1000;
+        background: rgba(15, 23, 42, 0.85);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .map-legend:hover {
+        border-color: rgba(0, 240, 255, 0.2);
+    }
+
     .legend-item {
         display: flex;
         align-items: center;
@@ -89,126 +354,397 @@
         color: var(--text-main);
         font-weight: 600;
     }
-    
+
     .legend-item .dot {
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        box-shadow: 0 0 6px currentColor;
+        box-shadow: 0 0 8px currentColor;
+        animation: pulseGlow 2s infinite;
     }
 
-    .metric-card.telegram {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
-        border-color: rgba(76, 175, 80, 0.3);
-    }
-    
-    .metric-card.telegram .metric-icon-box {
-        background: rgba(76, 175, 80, 0.2);
-        color: #4caf50;
+    .legend-dot-red {
+        background: #ff0055;
+        box-shadow: 0 0 10px #ff0055;
     }
 
-    .header-icon-main { color: var(--accent-blue); animation: pulseNeon 2s infinite alternate; font-size: 1.2rem; margin-left: 10px; }
-    .section-header-icon { color: var(--accent-orange); margin-right: 8px; }
-    .map-title { font-size: 1rem; margin-bottom: 1rem; }
-    .legend-dot-red { background: #ef4444; }
-    .legend-dot-orange { background: #f59e0b; }
-    .legend-dot-green { background: #10b981; }
-    
-    .report-card-icon { font-size: 1.1rem; width: 30px; text-align: center; }
-    .report-card-info { flex: 1; }
-    .report-card-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .reporter-name { font-weight: 600; font-size: 0.85rem; color: var(--text-main); }
-    .report-address { font-size: 0.75rem; color: var(--text-muted); }
-    .btn-notify-email { background: transparent; border: none; color: var(--accent-orange); cursor: pointer; padding: 2px 5px; }
-    .flex-1 { flex: 1; }
-    .metric-content { width: 100%; display: flex; flex-direction: column; }
-    
-    /* Grille des Graphiques en bas - Version Compacte */
-    .visuals-grid { 
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 1.25rem; 
+    .legend-dot-orange {
+        background: #ffb800;
+        box-shadow: 0 0 10px #ffb800;
+    }
+
+    .legend-dot-green {
+        background: #00e676;
+        box-shadow: 0 0 10px #00e676;
+    }
+
+    /* Custom Marker Pulse */
+    .marker-pulse {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 15px currentColor;
+        animation: markerPulse 1.5s infinite;
+    }
+
+    @keyframes markerPulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(3);
+            opacity: 0;
+        }
+    }
+
+    /* --- Incident Report Cards --- */
+    .report-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent;
+        border-left: 3px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.03), transparent);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .report-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-left-color: var(--accent-blue);
+        transform: translateX(4px);
+    }
+
+    .report-card:hover::after {
+        opacity: 1;
+    }
+
+    .badge {
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .badge-eau {
+        background: rgba(0, 240, 255, 0.1);
+        color: var(--accent-blue);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+    .badge-accident {
+        background: rgba(255, 0, 85, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(255, 0, 85, 0.2);
+    }
+
+    .badge-electricite {
+        background: rgba(255, 184, 0, 0.1);
+        color: var(--accent-yellow);
+        border: 1px solid rgba(255, 184, 0, 0.2);
+    }
+
+    .badge-telegram {
+        background: rgba(0, 230, 118, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(0, 230, 118, 0.2);
+    }
+
+    .report-card-icon {
+        font-size: 1.1rem;
+        width: 30px;
+        text-align: center;
+    }
+
+    .report-card-info {
+        flex: 1;
+    }
+
+    .report-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
+    }
+
+    .reporter-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-main);
+    }
+
+    .report-address {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .report-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-notify-email {
+        background: transparent;
+        border: none;
+        color: var(--accent-orange);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .btn-notify-email:hover {
+        background: rgba(255, 51, 102, 0.1);
+        transform: scale(1.15);
+    }
+
+    /* --- Recent List --- */
+    .recent-list {
+        padding: 1.25rem;
+        overflow-y: auto;
+        max-height: 480px;
+        animation: cardEntrance 0.6s ease-out 0.35s both;
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        color: var(--accent-blue);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* --- Chart Grid --- */
+    .visuals-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
         margin-top: 1.5rem;
     }
-    
-    .chart-box { 
-        padding: 1.25rem; 
-        height: 240px; 
+
+    .chart-box {
+        padding: 1.25rem;
+        height: 260px;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: cardEntrance 0.6s ease-out both;
     }
 
-    .recent-list { padding: 1rem; overflow-y: auto; max-height: 480px; }
-    .section-title { font-size: 0.9rem; margin-bottom: 1rem; color: var(--accent-blue); }
-    .report-card-footer { display: flex; justify-content: space-between; align-items: center; }
+    .chart-box:nth-child(1) {
+        animation-delay: 0.4s;
+    }
 
+    .chart-box:nth-child(2) {
+        animation-delay: 0.45s;
+    }
+
+    .chart-box:nth-child(3) {
+        animation-delay: 0.5s;
+    }
+
+    .chart-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+        opacity: 0;
+        transition: opacity 0.4s;
+    }
+
+    .chart-box:hover::before {
+        opacity: 1;
+    }
+
+    /* Fix for inline styles */
+    .bell-icon {
+        margin-right: 6px;
+    }
+
+    .empty-state-text {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-align: center;
+        padding: 2rem 0;
+    }
+
+    /* --- Misc --- */
+    .header-icon-main {
+        color: var(--accent-blue);
+        animation: pulseNeon 2s infinite alternate;
+        font-size: 1.2rem;
+        margin-left: 10px;
+    }
+
+    .section-header-icon {
+        color: var(--accent-orange);
+        margin-right: 8px;
+    }
+
+    .map-title {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    /* --- Responsive --- */
     @media (max-width: 1200px) {
-        .visuals-grid { grid-template-columns: 1fr; }
+        .visuals-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 1024px) {
-        .dashboard-grid { grid-template-columns: 1fr; }
-        .map-container { height: 400px; }
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #map {
+            height: 320px;
+        }
+
+        .metrics-grid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .metrics-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .metric-card {
+            padding: 1rem;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+        }
+
+        .metric-icon-box {
+            width: 42px;
+            height: 42px;
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- Clickable Metric Cards --- */
+    .metric-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Animated Counter Metric Cards -->
 <div class="metrics-grid">
-    <div class="glass-card metric-card total">
-        <div class="metric-icon-box"><i class="fas fa-layer-group"></i></div>
-        <div class="metric-content">
-            <div class="metric-value">{{ metrics.total }}</div>
-            <div class="metric-label">Alertes Totales</div>
+    <a href="{% url 'dashboard:incident_list' %}" class="metric-card-link">
+        <div class="glass-card metric-card total">
+            <div class="metric-icon-box"><i class="fas fa-layer-group"></i></div>
+            <div class="metric-content">
+                <div class="metric-value" data-target="{{ metrics.total }}">0</div>
+                <div class="metric-label">Alertes Totales</div>
+            </div>
         </div>
-    </div>
-    <div class="glass-card metric-card water">
-        <div class="metric-icon-box"><i class="fas fa-droplet"></i></div>
-        <div class="metric-content">
-            <div class="metric-value">{{ metrics.water }}</div>
-            <div class="metric-label">Réseau d'Eau</div>
+    </a>
+    <a href="{% url 'dashboard:incident_list_category' 'eau' %}" class="metric-card-link">
+        <div class="glass-card metric-card water">
+            <div class="metric-icon-box"><i class="fas fa-droplet"></i></div>
+            <div class="metric-content">
+                <div class="metric-value" data-target="{{ metrics.water }}">0</div>
+                <div class="metric-label">Réseau d'Eau</div>
+            </div>
         </div>
-    </div>
-    <div class="glass-card metric-card accident">
-        <div class="metric-icon-box"><i class="fas fa-car-burst"></i></div>
-        <div class="metric-content">
-            <div class="metric-value">{{ metrics.accidents }}</div>
-            <div class="metric-label">Incid. Route</div>
+    </a>
+    <a href="{% url 'dashboard:incident_list_category' 'accident' %}" class="metric-card-link">
+        <div class="glass-card metric-card accident">
+            <div class="metric-icon-box"><i class="fas fa-car-burst"></i></div>
+            <div class="metric-content">
+                <div class="metric-value" data-target="{{ metrics.accidents }}">0</div>
+                <div class="metric-label">Incid. Route</div>
+            </div>
         </div>
-    </div>
-    <div class="glass-card metric-card electric">
-        <div class="metric-icon-box"><i class="fas fa-bolt"></i></div>
-        <div class="metric-content">
-            <div class="metric-value">{{ metrics.electric }}</div>
-            <div class="metric-label">Pannes Élec.</div>
+    </a>
+    <a href="{% url 'dashboard:incident_list_category' 'electricite' %}" class="metric-card-link">
+        <div class="glass-card metric-card electric">
+            <div class="metric-icon-box"><i class="fas fa-bolt"></i></div>
+            <div class="metric-content">
+                <div class="metric-value" data-target="{{ metrics.electric }}">0</div>
+                <div class="metric-label">Pannes Élec.</div>
+            </div>
         </div>
-    </div>
-    <div class="glass-card metric-card telegram">
-        <div class="metric-icon-box"><i class="fas fa-robot"></i></div>
-        <div class="metric-content">
-            <div class="metric-value">{{ metrics.telegram }}</div>
-            <div class="metric-label">Bot Telegram</div>
+    </a>
+    <a href="{% url 'dashboard:incident_list_category' 'telegram' %}" class="metric-card-link">
+        <div class="glass-card metric-card telegram">
+            <div class="metric-icon-box"><i class="fas fa-robot"></i></div>
+            <div class="metric-content">
+                <div class="metric-value" data-target="{{ metrics.telegram }}">0</div>
+                <div class="metric-label">Bot Telegram</div>
+            </div>
         </div>
-    </div>
+    </a>
 </div>
 
+<!-- Map + Recent Alerts -->
 <div class="dashboard-grid">
     <div class="glass-card map-container">
         <h3 class="map-title"><i class="fas fa-map-location-dot section-header-icon"></i> Situation de la Ville</h3>
-        <div id="map"></div>
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div class="map-vignette"></div>
+        </div>
         <div class="map-legend">
             <div class="legend-item"><span class="dot legend-dot-red"></span> Signalé</div>
             <div class="legend-item"><span class="dot legend-dot-orange"></span> En cours</div>
             <div class="legend-item"><span class="dot legend-dot-green"></span> Résolu / Clos</div>
         </div>
     </div>
-    
+
     <div class="glass-card recent-list">
-        <h3 class="section-title">Dernières Alertes</h3>
+        <h3 class="section-title"><i class="fas fa-bell bell-icon"></i> Dernières Alertes</h3>
         {% for incident in incidents %}
         <div class="report-card incident-card" data-lat="{{ incident.latitude }}" data-lon="{{ incident.longitude }}">
-            <i class="fas {% if incident.category == 'Eau' %}fa-droplet color-eau{% elif incident.category == 'Accident' %}fa-car-burst color-accident{% elif incident.category == 'Electricite' %}fa-bolt color-electricite{% else %}fa-exclamation-triangle{% endif %} report-card-icon"></i>
+            <i
+                class="fas {% if incident.category == 'Eau' %}fa-droplet color-eau{% elif incident.category == 'Accident' %}fa-car-burst color-accident{% elif incident.category == 'Electricite' %}fa-bolt color-electricite{% else %}fa-exclamation-triangle{% endif %} report-card-icon"></i>
             <div class="report-card-info">
                 <div class="report-card-header">
                     <span class="reporter-name">{{ incident.user_name }}</span>
@@ -216,18 +752,22 @@
                 </div>
                 <div class="report-card-footer">
                     <p class="report-address">{{ incident.address|truncatechars:20 }}</p>
-                    <button type="button" class="btn-notify-email" data-id="{{ incident.id }}" title="Notifier">
+                    <button type="button" class="btn-notify-email" data-id="{{ incident.id }}"
+                        title="Notifier par email">
                         <i class="fas fa-envelope"></i>
                     </button>
                 </div>
             </div>
         </div>
+        {% empty %}
+        <p class="empty-state-text">Aucune alerte récente</p>
         {% endfor %}
     </div>
 </div>
 
+<!-- Email Notification Script -->
 <script>
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const btn = e.target.closest('.btn-notify-email');
         if (btn) {
             const id = btn.dataset.id;
@@ -237,7 +777,6 @@
 
     async function sendEmail(id, btn) {
         const icon = btn.querySelector('i');
-        
         btn.style.opacity = '0.5';
         btn.disabled = true;
         icon.className = 'fas fa-spinner fa-spin';
@@ -249,7 +788,7 @@
             const data = await response.json();
             if (data.status === 'success') {
                 icon.className = 'fas fa-check text-success';
-                showNotification('Email Envoyé', 'Le mail de notification a été généré avec succès (voir terminal).', 'success');
+                showNotification('Email Envoyé', 'Notification envoyée avec succès.', 'success');
             } else {
                 throw new Error(data.message);
             }
@@ -266,19 +805,50 @@
     }
 </script>
 
+<!-- Charts Section -->
 <div class="visuals-grid">
-    <div class="chart-box"><canvas id="statusChart"></canvas></div>
-    <div class="chart-box"><canvas id="categoryChart"></canvas></div>
-    <div class="chart-box"><canvas id="trendChart"></canvas></div>
+    <div class="glass-card chart-box">
+        <canvas id="statusChart"></canvas>
+    </div>
+    <div class="glass-card chart-box">
+        <canvas id="categoryChart"></canvas>
+    </div>
+    <div class="glass-card chart-box">
+        <canvas id="trendChart"></canvas>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // ===== ANIMATED COUNTERS =====
+    function animateCounters() {
+        document.querySelectorAll('.metric-value[data-target]').forEach(el => {
+            const target = parseInt(el.dataset.target) || 0;
+            const duration = 1200;
+            const start = performance.now();
+            function step(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target);
+                if (progress < 1) requestAnimationFrame(step);
+                else el.textContent = target;
+            }
+            requestAnimationFrame(step);
+        });
+    }
+    animateCounters();
+
     var isLightMode = document.body.classList.contains('light-theme');
     var mapStyle = isLightMode ? 'light_all' : 'dark_all';
-    
-    var map = L.map('map', { zoomControl: false }).setView([46.2276, 2.2137], 6);
+
+    var map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([46.2276, 2.2137], 6);
+
+    // Style de carte fiable (CartoDB)
+    var mapStyle = isLightMode ? 'light_all' : 'dark_all';
     L.tileLayer('https://{s}.basemaps.cartocdn.com/' + mapStyle + '/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CartoDB'
     }).addTo(map);
@@ -305,15 +875,28 @@
         markers.clearLayers();
         heatPoints = [];
         const bounds = [];
-        
+
         incidents.forEach(incident => {
             if (incident.latitude && incident.longitude) {
                 const lat = parseFloat(incident.latitude);
                 const lon = parseFloat(incident.longitude);
                 const color = getStatusColor(incident.status);
-                
-                const marker = L.circleMarker([lat, lon], {
-                    radius: 8, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9
+
+                // Utilisation de DivIcon pour un effet de pulsation moderne
+                const markerHtml = `
+                    <div style="color: ${color}; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <div class="marker-pulse" style="background: ${color}; position: absolute;"></div>
+                        <div style="width: 12px; height: 12px; background: ${color}; border-radius: 50%; border: 2px solid #fff; z-index: 2; box-shadow: 0 0 10px ${color}88;"></div>
+                    </div>
+                `;
+
+                const marker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: markerHtml,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    })
                 }).bindPopup(`
                     <div style="font-family: inherit; color: #1e293b;">
                         <b style="color: ${color}; text-transform: uppercase; font-size: 0.7rem;">${incident.category}</b><br>
@@ -321,13 +904,13 @@
                         <small style="color: #64748b;">${incident.address}</small>
                     </div>
                 `);
-                
+
                 markers.addLayer(marker);
                 heatPoints.push([lat, lon, 0.5]);
                 bounds.push([lat, lon]);
             }
         });
-        
+
         map.addLayer(markers);
         heatLayer.setLatLngs(heatPoints);
 
@@ -349,11 +932,11 @@
     const metricsData = JSON.parse(document.getElementById('metrics-data').textContent);
     const statusData = JSON.parse(document.getElementById('status-data').textContent);
     const trendData = JSON.parse(document.getElementById('trend-data').textContent);
-    
+
     updateMap(initialIncidents);
 
     // Event Delegation for incident cards
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const card = e.target.closest('.incident-card');
         if (card) {
             const lat = parseFloat(card.dataset.lat);
@@ -371,23 +954,37 @@
         try {
             const response = await fetch('{% url "dashboard:latest_incidents_api" %}');
             const data = await response.json();
-            
-            // Mise à jour des compteurs
-            document.querySelector('.total .metric-value').innerText = data.metrics.total;
-            document.querySelector('.water .metric-value').innerText = data.metrics.water;
-            document.querySelector('.accident .metric-value').innerText = data.metrics.accidents;
-            document.querySelector('.electric .metric-value').innerText = data.metrics.electric;
-            
+
+            // Mise à jour des compteurs avec animation
+            function animateValue(el, newVal) {
+                const current = parseInt(el.textContent) || 0;
+                const target = newVal;
+                const duration = 800;
+                const start = performance.now();
+                function step(now) {
+                    const progress = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    el.textContent = Math.floor(current + (target - current) * eased);
+                    if (progress < 1) requestAnimationFrame(step);
+                    else el.textContent = target;
+                }
+                requestAnimationFrame(step);
+            }
+            animateValue(document.querySelector('.total .metric-value'), data.metrics.total);
+            animateValue(document.querySelector('.water .metric-value'), data.metrics.water);
+            animateValue(document.querySelector('.accident .metric-value'), data.metrics.accidents);
+            animateValue(document.querySelector('.electric .metric-value'), data.metrics.electric);
+
             // Notification si nouveau
             if (data.incidents.length > 0 && data.incidents[0].id > lastIncidentId) {
                 const newInc = data.incidents[0];
                 showNotification(`Nouveau Signalement : ${newInc.category}`, newInc.address, 'success');
                 lastIncidentId = newInc.id;
-                
+
                 // Rafraîchir la liste latérale (optionnel ou complet)
                 location.reload(); // Pour simplifier le rafraîchissement complet du DOM pour le moment
             }
-            
+
             updateMap(data.incidents);
         } catch (e) {
             console.error("Polling error:", e);
@@ -400,33 +997,79 @@
     const isLight = document.body.classList.contains('light-theme');
     const chartTextColor = isLight ? '#64748B' : '#94a3b8';
     Chart.defaults.color = chartTextColor;
-    const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+    const commonOpts = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, pointStyleWidth: 10, font: { size: 11, weight: '600' } } }
+        }
+    };
 
-    new Chart(document.getElementById('statusChart'), {
-        type: 'doughnut',
-        data: {
-            labels: statusData.map(d => d.status),
-            datasets: [{ data: statusData.map(d => d.count), backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0 }]
-        },
-        options: { ...commonOpts, cutout: '70%', plugins: { title: { display: true, text: 'État des Traitements' } } }
-    });
+    // Status Chart - Doughnut with glow + spacing
+    if (statusData && statusData.length > 0) {
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusData.map(d => d.status),
+                datasets: [{
+                    data: statusData.map(d => d.count),
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                    borderWidth: 0,
+                    hoverOffset: 8,
+                    spacing: 3
+                }]
+            },
+            options: { ...commonOpts, cutout: '72%', plugins: { ...commonOpts.plugins, title: { display: true, text: 'État des Traitements', font: { size: 13, weight: '700' }, padding: { bottom: 10 } } } }
+        });
+    }
 
-    new Chart(document.getElementById('categoryChart'), {
-        type: 'pie',
+    // Category Chart - Polar Area with neon borders
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(catCtx, {
+        type: 'polarArea',
         data: {
             labels: ['Eau', 'Accidents', 'Électricité'],
-            datasets: [{ data: [metricsData.water, metricsData.accidents, metricsData.electric], backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b'], borderWidth: 0 }]
+            datasets: [{ data: [metricsData.water, metricsData.accidents, metricsData.electric], backgroundColor: ['rgba(0,240,255,0.25)', 'rgba(255,0,85,0.25)', 'rgba(255,184,0,0.25)'], borderColor: ['#00f0ff', '#ff0055', '#ffb800'], borderWidth: 2 }]
         },
-        options: { ...commonOpts, plugins: { title: { display: true, text: 'Répartition par Type' } } }
+        options: { ...commonOpts, plugins: { ...commonOpts.plugins, title: { display: true, text: 'Répartition par Type', font: { size: 13, weight: '700' }, padding: { bottom: 10 } } }, scales: { r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
     });
 
-    new Chart(document.getElementById('trendChart'), {
-        type: 'line',
-        data: {
-            labels: trendData.map(d => d.day),
-            datasets: [{ label: 'Signalisations', data: trendData.map(d => d.count), borderColor: '#ff6b35', tension: 0.4, fill: true, backgroundColor: 'rgba(255, 107, 53, 0.1)' }]
-        },
-        options: { ...commonOpts, plugins: { title: { display: true, text: 'Tendance 7 Jours' } } }
-    });
+    // Trend Chart - Line with gradient fill
+    if (trendData && trendData.length > 0) {
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        const trendGrad = trendCtx.createLinearGradient(0, 0, 0, 250);
+        trendGrad.addColorStop(0, 'rgba(0,240,255,0.3)');
+        trendGrad.addColorStop(1, 'rgba(0,240,255,0.0)');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendData.map(d => d.day),
+                datasets: [{
+                    label: 'Signalisations',
+                    data: trendData.map(d => d.count),
+                    borderColor: '#00f0ff',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: trendGrad,
+                    pointBackgroundColor: '#00f0ff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                ...commonOpts,
+                plugins: {
+                    ...commonOpts.plugins,
+                    title: { display: true, text: 'Tendance 7 Jours', font: { size: 13, weight: '700' }, padding: { bottom: 10 } }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { precision: 0 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
 </script>
 {% endblock %}

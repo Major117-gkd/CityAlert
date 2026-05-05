@@ -5,8 +5,8 @@ CityAlert est une plateforme professionnelle de supervision urbaine multiservice
 - **Supervision Multi-Incidents** : Fuites d'eau, accidents de la route, pannes électriques et anomalies urbaines.
 - **Bot Telegram Intelligent** : Signalement citoyen fluide avec analyse de photos par IA.
 - **Tableau de Bord Premium** : Design "Command Center" futuriste (Dark Mode, Cyan Néon) pour une supervision haute performance.
-- **IA de Vision Avancée** : Intégration de Google Gemini pour l'expertise automatique des signalements.
-- **Haute Disponibilité IA** : Système de secours automatique (Gemini 2.0 Flash → Gemini 1.5 Flash) pour garantir une réponse même en cas de quota atteint.
+- **IA de Vision Avancée** : Intégration de Groq AI pour l'expertise automatique des signalements.
+- **Haute Disponibilité IA** : Utilisation des modèles Llama 3 et Llama 3.2 Vision de Groq pour garantir une réponse ultra-rapide.
 - **Cerveau Local (Infaillibilité)** : Base de connaissances locale intégrée permettant à l'assistant de répondre instantanément aux questions de base sans solliciter l'IA.
 - **Commandes Vocales** : Assistant intelligent acceptant la voix et le texte pour une interaction mains-libres.
 

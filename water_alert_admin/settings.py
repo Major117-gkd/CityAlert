@@ -23,11 +23,11 @@ env_path = BASE_DIR / ".env"
 if env_path.exists():
     load_dotenv(env_path)
 
-# Gemini API Key - Récupérée depuis .env ou définie directement ici
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyBdjQDK72my7edLRpWRw47UTGTOFGZ13e0')
+# Groq API Key - Récupérée depuis .env ou définie directement ici
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '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')
 
 # Telegram Bot Token - Récupéré depuis .env ou défini directement ici
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8602841628:AAE3-OzPgOfA53ZwL3B5nG_KO-IRl5T-UK0')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 
 # Quick-start development settings - unsuitable for production
