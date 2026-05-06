@@ -1,915 +1,324 @@
 {% extends 'dashboard/base.html' %}
+{% load static %}
 
 {% block header_title %}{% endblock %}
 {% block header_subtitle %}{% endblock %}
 
 {% block content %}
-<div class="user-dashboard">
-    <!-- Header Section -->
-    <div class="welcome-section">
-        <div class="welcome-card">
-            <div class="user-avatar-welcome">
-                <i class="fas fa-user"></i>
-            </div>
-            <div class="user-info-welcome">
-                <h1>Bonjour, {{ user.username|title }} !</h1>
-                <p>{{ user.email }}</p>
-                <span class="user-badge">
-                    <i class="fas fa-shield-alt"></i>
-                    Citoyen Actif
-                </span>
+<div class="elite-dashboard compact">
+    <!-- Hero Header (Slim Version) -->
+    <div class="hero-slim">
+        <div class="hero-glass-slim">
+            <div class="hero-flex-slim">
+                <div class="user-intel-slim">
+                    <div class="intel-orb-sm">
+                        <div class="orb-core-sm">
+                            {% if user_profile.avatar %}
+                                <img src="{{ user_profile.avatar.url }}" alt="U">
+                            {% else %}
+                                <span class="orb-initial-sm">{{ user.username|first|upper }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="intel-text-slim">
+                        <div class="intel-status-line">
+                            <span class="status-pulse-sm"></span>
+                            CORE SYSTEM ACTIVE
+                        </div>
+                        <h1 class="user-greeting-slim">Bonjour, <span class="gradient-name">{{ user.username }}</span></h1>
+                    </div>
+                </div>
+                <div class="intel-actions-slim">
+                    <div class="quick-stats-mini">
+                        <div class="mini-stat">
+                            <span class="ms-val">{{ user_stats.total }}</span>
+                            <span class="ms-lab">Alertes</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="ms-val">{{ user_stats.resolved }}</span>
+                            <span class="ms-lab">Résolus</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'dashboard:report_incident' %}" class="btn-supernova-slim">
+                        <i class="fas fa-plus"></i>
+                        <span>Signaler</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card primary">
-            <div class="stat-icon">
-                <i class="fas fa-clipboard-list"></i>
-            </div>
-            <div class="stat-content">
-                <div id="stat-total" class="stat-number">{{ user_stats.total }}</div>
-                <div class="stat-label">Total Signalements</div>
+    <!-- Metrics Grid (Compact) -->
+    <div class="metrics-compact-grid">
+        <div class="metric-glass-sm cyan">
+            <div class="m-icon-sm"><i class="fas fa-layer-group"></i></div>
+            <div class="m-data-sm">
+                <div class="m-value-sm">{{ user_stats.total }}</div>
+                <div class="m-label-sm">SIGNALEMENTS</div>
             </div>
         </div>
-
-        <div class="stat-card warning">
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
-                <div id="stat-open" class="stat-number">{{ user_stats.open }}</div>
-                <div class="stat-label">En Cours</div>
+        <div class="metric-glass-sm amber">
+            <div class="m-icon-sm"><i class="fas fa-sync-alt fa-spin-slow"></i></div>
+            <div class="m-data-sm">
+                <div class="m-value-sm">{{ user_stats.open }}</div>
+                <div class="m-label-sm">EN ANALYSE</div>
             </div>
         </div>
-
-        <div class="stat-card success">
-            <div class="stat-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div id="stat-resolved" class="stat-number">{{ user_stats.resolved }}</div>
-                <div class="stat-label">Résolus</div>
+        <div class="metric-glass-sm emerald">
+            <div class="m-icon-sm"><i class="fas fa-check-circle"></i></div>
+            <div class="m-data-sm">
+                <div class="m-value-sm">{{ user_stats.resolved }}</div>
+                <div class="m-label-sm">TERMINÉS</div>
             </div>
         </div>
-
-        <div class="stat-card info">
-            <div class="stat-icon">
-                <i class="fas fa-chart-pie"></i>
-            </div>
-            <div class="stat-content">
-                <div id="stat-rate" class="stat-number">
+        <div class="metric-glass-sm violet">
+            <div class="m-icon-sm"><i class="fas fa-fingerprint"></i></div>
+            <div class="m-data-sm">
+                <div class="m-value-sm">
                     {% if user_stats.total > 0 %}
                         {% widthratio user_stats.resolved user_stats.total 100 %}%
                     {% else %}
                         0%
                     {% endif %}
                 </div>
-                <div class="stat-label">Taux de Résolution</div>
+                <div class="m-label-sm">INDEX</div>
             </div>
         </div>
     </div>
 
-    <!-- Chartes statistiques -->
-    <div class="charts-grid">
-        <div class="chart-card">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-pie"></i> Répartition par Catégorie</h3>
-            </div>
-            <div class="chart-body">
-                <canvas id="categoryChart" height="260"></canvas>
-            </div>
-        </div>
-        <div class="chart-card">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-bar"></i> Répartition par Statut</h3>
-            </div>
-            <div class="chart-body">
-                <canvas id="statusChart" height="260"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed Insights -->
-    <div class="detail-grid">
-        <div class="detail-card">
-            <div class="card-header">
-                <h3><i class="fas fa-tasks"></i> Répartition par Statut</h3>
-            </div>
-            <div class="detail-body">
-                {% if user_stats.by_status %}
-                    {% for stat in user_stats.by_status %}
-                    <div class="detail-row">
-                        <span class="detail-label">{{ stat.status }}</span>
-                        <span class="detail-value">{{ stat.count }}</span>
+    <!-- Operational Layout (Optimized) -->
+    <div class="ops-layout-compact">
+        <div class="ops-main-compact">
+            <div class="elite-card-compact">
+                <div class="card-header-sm">
+                    <div class="title-group-sm">
+                        <div class="title-bar-sm"></div>
+                        <h3>FLUX OPÉRATIONNEL</h3>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="empty-message">Aucun signalement pour l'instant.</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="detail-card">
-            <div class="card-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> Répartition par Gravité</h3>
-            </div>
-            <div class="detail-body">
-                {% if user_stats.by_severity %}
-                    {% for stat in user_stats.by_severity %}
-                    <div class="detail-row">
-                        <span class="detail-label">{{ stat.severity }}</span>
-                        <span class="detail-value">{{ stat.count }}</span>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="empty-message">Aucune gravité enregistrée.</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="detail-card">
-            <div class="card-header">
-                <h3><i class="fas fa-clock"></i> Derniers Signalements</h3>
-            </div>
-            <div class="detail-body">{% spaceless %}
-                {% if recent_incidents %}
-                    {% for incident in recent_incidents %}
-                        <ul class="recent-list"><li><strong>{{ incident.get_category_display }}</strong> — {{ incident.get_status_display }}<br><small>{{ incident.timestamp|date:"d/m/Y H:i" }} · {{ incident.severity }}</small></li></ul>
-                    {% endfor %}
-                {% else %}
-                    <p class="empty-message">Aucun signalement récent.</p>
-                {% endif %}
-            {% endspaceless %}</div>
-        </div>
-    </div>
-
-    <!-- Main Content Grid -->
-    <div class="content-grid">
-        <!-- Recent Incidents -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3><i class="fas fa-history"></i> Mes Signalements Récents</h3>
-                <a href="{% url 'dashboard:report_incident' %}" class="btn-primary">
-                    <i class="fas fa-plus"></i> Nouveau Signalement
-                </a>
-            </div>
-            
-            <div class="incidents-list">
-                {% if user_incidents %}
-                    {% for incident in user_incidents|slice:':5' %}
-                    <a href="{% url 'dashboard:incident_detail' incident.id %}" class="incident-item">
-                        <div class="incident-icon">
-                            <i class="fas {% if incident.category == 'Eau' %}fa-droplet{% elif incident.category == 'Accident' %}fa-car-burst{% else %}fa-bolt{% endif %}"></i>
+                    <a href="{% url 'dashboard:user_incidents' %}" class="card-link-sm">Archive <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <div class="card-content-compact">
+                    {% if user_incidents %}
+                        <div class="elite-feed-compact">
+                            {% for incident in user_incidents|slice:':5' %}
+                            <a href="{% url 'dashboard:incident_detail' incident.id %}" class="feed-card-sm">
+                                <div class="feed-cat-icon-sm cat-{{ incident.category|lower }}">
+                                    <i class="fas {% if incident.category == 'Eau' %}fa-droplet{% elif incident.category == 'Accident' %}fa-car-burst{% else %}fa-bolt{% endif %}"></i>
+                                </div>
+                                <div class="feed-info-sm">
+                                    <div class="feed-top-sm">
+                                        <span class="feed-cat-sm">{{ incident.get_category_display }}</span>
+                                        <span class="feed-status-sm status-{{ incident.status|lower|cut:' ' }}">{{ incident.get_status_display }}</span>
+                                    </div>
+                                    <div class="feed-mid-sm">
+                                        <i class="fas fa-location-dot"></i> {{ incident.address|truncatechars:80 }}
+                                    </div>
+                                </div>
+                                <div class="feed-meta-sm">
+                                    <span>{{ incident.timestamp|date:"d M" }}</span>
+                                    <span class="prio-sm prio-{{ incident.severity|lower }}">{{ incident.severity }}</span>
+                                </div>
+                                <div class="feed-action-sm"><i class="fas fa-chevron-right"></i></div>
+                            </a>
+                            {% endfor %}
                         </div>
-                        <div class="incident-details">
-                            <div class="incident-header">
-                                <span class="incident-category">{{ incident.get_category_display }}</span>
-                                <span class="incident-status status-{{ incident.status|lower|cut:' ' }}">
-                                    {{ incident.get_status_display }}
-                                </span>
+                    {% else %}
+                        <div class="empty-state-compact">
+                            <div class="empty-orbit-sm">
+                                <div class="planet-sm"></div>
+                                <div class="satellite-sm"></div>
                             </div>
-                            <div class="incident-address">
-                                <i class="fas fa-map-marker-alt"></i>
-                                {{ incident.address|truncatechars:40 }}
-                            </div>
-                            <div class="incident-date">
-                                <i class="fas fa-calendar"></i>
-                                {{ incident.timestamp|date:"d/m/Y H:i" }}
-                            </div>
-                            <div class="incident-meta">
-                                <span class="incident-severity">Gravité : {{ incident.severity }}</span>
-                                {% if incident.assigned_technician %}
-                                <span class="incident-tech">Technicien : {{ incident.assigned_technician.name }}</span>
-                                {% endif %}
-                            </div>
+                            <h3>SÉQUENCE VIDE</h3>
+                            <p>En attente de signalement.</p>
+                            <a href="{% url 'dashboard:report_incident' %}" class="btn-init-sm">INITIALISER</a>
                         </div>
-                    </a>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h4>Aucun signalement</h4>
-                        <p>Vous n'avez pas encore signalé d'incident. Commencez dès maintenant !</p>
-                        <a href="{% url 'dashboard:report_incident' %}" class="btn-primary">
-                            <i class="fas fa-plus"></i> Signaler un Incident
-                        </a>
-                    </div>
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <!-- Category Breakdown -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-donut"></i> Répartition par Catégorie</h3>
-            </div>
-            
-            <div class="category-stats">
-                {% if user_stats.by_category %}
-                    {% for cat_stat in user_stats.by_category %}
-                    <div class="category-item">
-                        <div class="category-info">
-                            <div class="category-icon">
-                                <i class="fas {% if cat_stat.category == 'Eau' %}fa-droplet{% elif cat_stat.category == 'Accident' %}fa-car-burst{% else %}fa-bolt{% endif %}"></i>
-                            </div>
-                            <div class="category-details">
-                                <div class="category-name">{{ cat_stat.get_category_display }}</div>
-                                <div class="category-count">{{ cat_stat.count }} signalement{{ cat_stat.count|pluralize }}</div>
-                            </div>
-                        </div>
-                        <div class="category-percentage">
-                            {% widthratio cat_stat.count user_stats.total 100 %}%
+        <div class="ops-side-compact">
+            <div class="elite-card-compact side-mb-sm">
+                <div class="card-header-sm">
+                    <h3>RÉPARTITION</h3>
+                </div>
+                <div class="card-content-compact center">
+                    <div class="chart-box-sm">
+                        <canvas id="chartCompact"></canvas>
+                        <div class="chart-overlay-sm">
+                            <span class="ov-val-sm">{{ user_stats.total }}</span>
                         </div>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-chart-pie"></i>
-                        <p>Aucune donnée statistique disponible</p>
+                </div>
+            </div>
+
+            <div class="elite-card-compact highlight-border-sm">
+                <div class="card-header-sm">
+                    <h3>ACADÉMIE</h3>
+                </div>
+                <div class="card-content-compact">
+                    <div class="tip-card-sm">
+                        <div class="tip-ico-sm"><i class="fas fa-image"></i></div>
+                        <div class="tip-txt-sm"><strong>Photos :</strong> Accélère le traitement.</div>
                     </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Resources & Tips -->
-        <div class="content-card">
-            <div class="card-header">
-                <h3><i class="fas fa-lightbulb"></i> Ressources &amp; Conseils</h3>
-            </div>
-            <div class="content-body resources-body">
-                <p class="resources-intro">
-                    Retrouvez ici des conseils rapides pour signaler efficacement vos incidents et suivre leur traitement.
-                </p>
-
-                <ul class="resources-list">
-                    <li class="resource-item">
-                        <span class="dot dot-blue">•</span>
-                        <div>
-                            <strong>Précisez l'emplacement</strong> : la localisation aide les équipes à intervenir plus vite.
-                        </div>
-                    </li>
-                    <li class="resource-item">
-                        <span class="dot dot-orange">•</span>
-                        <div>
-                            <strong>Ajoutez une photo</strong> si possible, cela clarifie la situation et accélère le diagnostic.
-                        </div>
-                    </li>
-                    <li class="resource-item">
-                        <span class="dot dot-green">•</span>
-                        <div>
-                            <strong>Suivez l'état</strong> : consultez <a href="{% url 'dashboard:user_incidents' %}" class="inline-link">vos signalements</a> pour voir les mises à jour.
-                        </div>
-                    </li>
-                    <li class="resource-item last">
-                        <span class="dot dot-yellow">•</span>
-                        <div>
-                            <strong>Besoin d'aide ?</strong> Contactez-nous via le support : <a href="mailto:support@cityalert.com" class="inline-link">support@cityalert.com</a>.
-                        </div>
-                    </li>
-                </ul>
+                    <div class="tip-card-sm">
+                        <div class="tip-ico-sm"><i class="fas fa-map-marked"></i></div>
+                        <div class="tip-txt-sm"><strong>GPS :</strong> Précision chirurgicale.</div>
+                    </div>
+                    <button onclick="showHelp()" class="btn-support-sm">SUPPORT</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Meta Tunnel -->
+<div id="meta-tunnel" style="display:none;"
+    data-labels="{% for stat in user_stats.by_category %}{{ stat.category }}{% if not forloop.last %},{% endif %}{% endfor %}"
+    data-values="{% for stat in user_stats.by_category %}{{ stat.count }}{% if not forloop.last %},{% endif %}{% endfor %}">
+</div>
+
 <style>
-.user-dashboard {
-    padding: 0 2rem 2rem 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+    :root {
+        --e-bg: #030712;
+        --e-glass: rgba(15, 23, 42, 0.6);
+        --e-border: rgba(255, 255, 255, 0.06);
+        --e-accent: #00f0ff;
+        --e-text: #f8fafc;
+        --e-muted: #64748b;
+    }
 
-/* Welcome Section */
-.welcome-section {
-    margin-bottom: 2.5rem;
-    position: sticky;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 9999;
-    padding: 1.5rem 2rem;
-    background: var(--primary-bg);
-    -webkit-backdrop-filter: blur(30px);
-    backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--border-color);
-    margin-left: -2rem;
-    margin-right: -2rem;
-}
+    .elite-dashboard.compact { padding: 0.5rem 0; animation: eliteFadeIn 0.8s ease-out; }
 
-.welcome-card {
-    background: transparent;
-    border-radius: 0;
-    padding: 0.5rem 0;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    border: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-}
-
-.user-avatar-welcome {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2);
-}
-
-.user-info-welcome h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.2rem;
-    color: var(--text-main);
-}
-
-.user-info-welcome p {
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.user-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid var(--border-color);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-}
-
-.stat-card.primary .stat-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-.stat-card.warning .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-card.success .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-card.info .stat-icon { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-main);
-    line-height: 1.1;
-}
-
-.stat-label {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-/* Content Grid */
-.content-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.content-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    overflow: hidden;
-}
-
-.card-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.card-header h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Incidents List */
-.incidents-list {
-    padding: 1.5rem;
-}
-
-.incident-item {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 12px;
-    background: rgba(148, 163, 184, 0.05);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.incident-item:hover {
-    background: rgba(148, 163, 184, 0.1);
-    transform: translateX(4px);
-}
-
-.incident-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(148, 163, 184, 0.1);
-    color: var(--accent-orange);
-}
-
-.incident-details {
-    flex: 1;
-}
-
-.incident-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.incident-category {
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-.incident-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.ai-diag { margin-bottom: 0.5rem; }
-
-.status-signalé { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-.status-encours { background: rgba(245, 158, 11, 0.1); color: var(--accent-yellow); }
-.status-réparé { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-
-.incident-address, .incident-date {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Category Stats */
-.category-stats {
-    padding: 1.5rem;
-}
-
-.category-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    border-radius: 12px;
-    background: rgba(148, 163, 184, 0.05);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1rem;
-}
-
-.category-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.category-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(148, 163, 184, 0.1);
-    color: var(--accent-blue);
-}
-
-.category-name {
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-.category-count {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.category-percentage {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--accent-orange);
-}
-
-/* Charts */
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.chart-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    overflow: hidden;
-}
-
-.chart-body {
-    padding: 1.5rem;
-}
-
-/* Detailed Insights */
-.detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.detail-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    overflow: hidden;
-}
-
-.detail-body {
-    padding: 1.25rem 1.5rem 1.5rem;
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.detail-row:last-child {
-    border-bottom: none;
-}
-
-.detail-label {
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.detail-value {
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-.recent-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.recent-list li {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.recent-list li:last-child {
-    border-bottom: none;
-}
-
-.incident-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-.incident-severity,
-.incident-tech {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.1);
-    color: var(--text-muted);
-}
-
-/* Buttons */
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.2rem;
-    background: var(--accent-orange);
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-    border: none;
-}
-
-.btn-primary:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-muted);
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.3;
-}
-
-.empty-state h4 {
-    margin-bottom: 0.5rem;
-    color: var(--text-main);
-}
-
-/* Resources block styles */
-.resources-body { padding: 1.5rem; }
-.resources-intro { color: var(--text-muted); margin-bottom: 1rem; }
-.resources-list { list-style: none; padding: 0; margin: 0; }
-.resource-item { margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.75rem; }
-.resource-item.last { margin-bottom: 0; }
-.dot { font-size: 1.25rem; }
-.dot-blue { color: var(--accent-blue); }
-.dot-orange { color: var(--accent-orange); }
-.dot-green { color: var(--accent-green); }
-.dot-yellow { color: var(--accent-yellow); }
-.inline-link { color: var(--accent-blue); text-decoration: underline; }
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .content-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-    .diag-tech-icon { color: var(--accent-orange); }
-    .ai-body-content { background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 10px; font-size: 0.9rem; line-height: 1.6; }
+    /* Hero Slim */
+    .hero-slim { margin-bottom: 1rem; }
+    .hero-glass-slim {
+        padding: 1rem 2rem; border-radius: 20px;
+        background: var(--e-glass); border: 1px solid var(--e-border);
+        -webkit-backdrop-filter: blur(40px); backdrop-filter: blur(40px);
+        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
+    }
+    .hero-flex-slim { display: flex; justify-content: space-between; align-items: center; }
+    .user-intel-slim { display: flex; align-items: center; gap: 1.25rem; }
+    .orb-core-sm {
+        width: 50px; height: 50px; border-radius: 50%; padding: 2px;
+        background: linear-gradient(135deg, var(--e-accent), #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid #030712;
+    }
+    .orb-core-sm img, .orb-initial-sm { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; background: #0f172a; font-size: 1.2rem; font-weight: 800; color: var(--e-accent); }
     
-    .tech-details-card { padding: 1.5rem; }
-    .user-dashboard { padding: 1rem; }
-    .welcome-card { flex-direction: column; text-align: center; }
-}
+    .intel-status-line { font-size: 0.6rem; font-weight: 900; color: #10b981; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.1rem; }
+    .status-pulse-sm { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulseEmerald 2s infinite; }
+    .user-greeting-slim { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.02em; }
+    .gradient-name { background: linear-gradient(90deg, #fff, var(--e-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-.top-bar { display: none !important; }
-.main-container { margin-top: 0 !important; }
+    .intel-actions-slim { display: flex; align-items: center; gap: 2rem; }
+    .quick-stats-mini { display: flex; gap: 1.5rem; }
+    .mini-stat { text-align: center; }
+    .ms-val { display: block; font-size: 1.1rem; font-weight: 900; color: white; line-height: 1; }
+    .ms-lab { font-size: 0.6rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase; }
+
+    .btn-supernova-slim {
+        background: linear-gradient(135deg, var(--e-accent), #00c0ff);
+        color: #020617; padding: 0.6rem 1.25rem; border-radius: 12px;
+        text-decoration: none; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem;
+        transition: 0.3s; box-shadow: 0 10px 20px -5px rgba(0, 240, 255, 0.4);
+    }
+    .btn-supernova-slim:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    /* Metrics Compact */
+    .metrics-compact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-glass-sm {
+        background: var(--e-glass); border-radius: 16px;
+        padding: 0.85rem 1.25rem; border: 1px solid var(--e-border);
+        display: flex; align-items: center; gap: 1rem; transition: 0.3s;
+    }
+    .metric-glass-sm:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
+    .m-icon-sm { font-size: 1.2rem; color: var(--accent-clr); opacity: 0.8; }
+    .m-value-sm { font-size: 1.4rem; font-weight: 900; color: white; line-height: 1; }
+    .m-label-sm { font-size: 0.55rem; font-weight: 800; color: var(--e-muted); letter-spacing: 0.05em; }
+
+    /* Operational Layout Optimized */
+    .ops-layout-compact { display: grid; grid-template-columns: 1fr 300px; gap: 1.25rem; align-items: start; }
+    .elite-card-compact { background: var(--e-glass); border-radius: 20px; border: 1px solid var(--e-border); }
+    .card-header-sm { padding: 1rem 1.5rem; border-bottom: 1px solid var(--e-border); display: flex; justify-content: space-between; align-items: center; }
+    .title-group-sm { display: flex; align-items: center; gap: 0.75rem; }
+    .title-bar-sm { width: 3px; height: 14px; background: var(--e-accent); border-radius: 2px; }
+    .title-group-sm h3 { font-size: 0.75rem; font-weight: 900; color: white; letter-spacing: 0.05em; }
+    .card-link-sm { color: var(--e-accent); text-decoration: none; font-size: 0.7rem; font-weight: 700; }
+
+    .elite-feed-compact { padding: 0.5rem; }
+    .feed-card-sm {
+        display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;
+        border-radius: 12px; text-decoration: none; margin-bottom: 0.4rem;
+        transition: 0.2s; border: 1px solid transparent;
+    }
+    .feed-card-sm:hover { background: rgba(255,255,255,0.03); border-color: var(--e-border); }
+    .feed-cat-icon-sm { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .feed-info-sm { flex: 1; }
+    .feed-top-sm { display: flex; justify-content: space-between; margin-bottom: 0.15rem; }
+    .feed-cat-sm { font-weight: 800; color: white; font-size: 0.85rem; }
+    .feed-status-sm { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; opacity: 0.9; }
+    .feed-mid-sm { font-size: 0.75rem; color: var(--e-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px; }
+    .feed-meta-sm { text-align: right; font-size: 0.7rem; font-weight: 700; color: var(--e-muted); min-width: 80px; }
+    .prio-sm { display: block; font-size: 0.55rem; margin-top: 2px; }
+    .feed-action-sm { color: var(--e-border); font-size: 0.8rem; }
+
+    /* Empty State Compact */
+    .empty-state-compact { padding: 2rem; text-align: center; }
+    .empty-orbit-sm { position: relative; width: 100px; height: 100px; margin: 0 auto 1rem; }
+    .planet-sm { width: 40px; height: 40px; background: #1e293b; border-radius: 50%; position: absolute; top: 30px; left: 30px; border: 1px solid var(--e-border); }
+    .satellite-sm { width: 12px; height: 12px; background: var(--e-accent); border-radius: 3px; position: absolute; animation: orbitElite 8s linear infinite; }
+    .empty-state-compact h3 { font-size: 1rem; font-weight: 900; color: white; }
+    .empty-state-compact p { font-size: 0.75rem; color: var(--e-muted); margin-bottom: 1rem; }
+    .btn-init-sm { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 8px; background: rgba(255,255,255,0.03); color: white; border: 1px solid var(--e-border); text-decoration: none; font-weight: 900; font-size: 0.7rem; }
+
+    /* Side Side Compact */
+    .chart-box-sm { position: relative; width: 180px; height: 180px; padding: 1rem; }
+    .ov-val-sm { font-size: 1.5rem; font-weight: 900; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .tip-card-sm { display: flex; gap: 0.75rem; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 12px; margin-bottom: 0.5rem; }
+    .tip-ico-sm { width: 28px; height: 28px; border-radius: 8px; background: rgba(0, 240, 255, 0.1); color: var(--e-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.8rem; }
+    .tip-txt-sm { font-size: 0.75rem; color: var(--e-muted); line-height: 1.3; }
+    .btn-support-sm { width: 100%; margin-top: 0.5rem; padding: 0.6rem; border-radius: 10px; background: white; color: #030712; border: none; font-weight: 900; font-size: 0.7rem; cursor: pointer; }
+    .side-mb-sm { margin-bottom: 1rem; }
+
+    @media (max-width: 1024px) { 
+        .metrics-compact-grid { grid-template-columns: repeat(2, 1fr); }
+        .ops-layout-compact { grid-template-columns: 1fr; }
+    }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Exporter les données de l'utilisateur au format CSV
-    function exportCSV() {
-        fetch('{% url "dashboard:export_incidents_csv" %}')
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();
-                }
-                throw new Error('Export échoué');
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'mes_incidents_' + new Date().toISOString().split('T')[0] + '.csv';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                alert('Erreur lors de l\'export des données');
-            });
-    }
-
-function showHelp() {
-    // Afficher une modal d'aide
-    const helpModal = `
-        <div id="helpModal" class="help-modal-overlay">
-            <div class="help-modal-content">
-                <div class="help-modal-header">
-                    <h3 class="help-modal-title"><i class="fas fa-question-circle help-icon-prefix"></i>Aide & Support</h3>
-                    <button onclick="openTechModal()" class="action-btn btn-outline btn-profile-row" title="Voir le profil de l'équipe assignée">
-                        <i class="fas fa-id-card diag-tech-icon"></i> Profil de l'équipe
-                    </button>
-                    <button onclick="closeHelp()" class="help-modal-close">×</button>
-                </div>
-                
-                <div class="help-modal-body">
-                    <ul class="help-list">
-                        <li class="help-list-item">Consultez vos <strong>statistiques</strong> en haut de la page</li>
-                        <li class="help-list-item">Visualisez vos <strong>signalements récents</strong> à gauche</li>
-                        <li class="help-list-item">Analysez la <strong>répartition par catégorie</strong> à droite</li>
-                        <li class="help-list-item">Utilisez les <strong>actions rapides</strong> pour signaler ou exporter</li>
-                    </ul>
-                    
-                    <h4 class="help-section-title">Contact Support</h4>
-                    <p>Pour toute question technique : <strong>support@cityalert.com</strong></p>
-                    <p>Pour urgence : appelez le <strong>numéro d'urgence local</strong></p>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', helpModal);
-}
-
-function closeHelp() {
-    const modal = document.getElementById('helpModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-// Fermer la modal en cliquant en dehors
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('helpModal');
-    if (modal && event.target === modal) {
-        closeHelp();
-    }
-});
-
-// Animation des nombres de statistiques
-document.addEventListener('DOMContentLoaded', function() {
-    const statNumbers = document.querySelectorAll('.stat-number');
-    statNumbers.forEach(element => {
-        const finalValue = element.textContent;
-        const numericValue = parseInt(finalValue);
-        let currentValue = 0;
-        const increment = numericValue / 50;
+    document.addEventListener('DOMContentLoaded', function() {
+        const tunnel = document.getElementById('meta-tunnel');
+        if (!tunnel) return;
         
-        const timer = setInterval(() => {
-            currentValue += increment;
-            if (currentValue >= numericValue) {
-                currentValue = numericValue;
-                clearInterval(timer);
-            }
-            element.textContent = Math.floor(currentValue) + (finalValue.includes('%') ? '%' : '');
-        }, 20);
-    });
-
-    // Fetch latest stats from API (linked to DB)
-    async function refreshDashboardData() {
-        try {
-            const response = await fetch('{% url "dashboard:user_dashboard_api" %}');
-            const data = await response.json();
-
-            // Update stat values
-            document.getElementById('stat-total').textContent = data.user_stats.total;
-            document.getElementById('stat-open').textContent = data.user_stats.open;
-            document.getElementById('stat-resolved').textContent = data.user_stats.resolved;
-            const rate = data.user_stats.total > 0 ? Math.round((data.user_stats.resolved / data.user_stats.total) * 100) : 0;
-            document.getElementById('stat-rate').textContent = rate + '%';
-
-            // Update charts
-            const categoryLabels = data.user_stats.by_category.map(item => item.category);
-            const categoryData = data.user_stats.by_category.map(item => item.count);
-            updateChart(categoryChart, categoryLabels, categoryData);
-
-            const statusLabels = data.user_stats.by_status.map(item => item.status);
-            const statusData = data.user_stats.by_status.map(item => item.count);
-            updateChart(statusChart, statusLabels, statusData);
-
-            // Update recent incidents list
-            const recentList = document.querySelector('.recent-list');
-            if (recentList) {
-                recentList.innerHTML = '';
-                data.recent_incidents.forEach(incident => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<strong>${incident.category}</strong> — ${incident.status}<br><small>${incident.timestamp} · ${incident.severity}</small>`;
-                    recentList.appendChild(li);
-                });
-            }
-        } catch (err) {
-            console.error('Impossible de charger les données dashboard:', err);
-        }
-    }
-
-    function updateChart(chart, labels, data) {
-        if (!chart) return;
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = data;
-        chart.update();
-    }
-
-    // Create charts once
-    const categoryCtx = document.getElementById('categoryChart');
-    const statusCtx = document.getElementById('statusChart');
-
-    const categoryChart = new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { position: 'bottom', labels: { color: '#e2e8f0' } }
-            }
-        }
-    });
-
-    const statusChart = new Chart(statusCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Nombre de signalements',
-                data: [],
-                backgroundColor: ['#2563eb', '#f59e0b', '#10b981', '#64748b'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { display: false }
+        const labelsArr = tunnel.getAttribute('data-labels').split(',').filter(l => l !== "");
+        const valuesArr = tunnel.getAttribute('data-values').split(',').filter(v => v !== "").map(Number);
+        
+        const ctx = document.getElementById('chartCompact').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labelsArr,
+                datasets: [{
+                    data: valuesArr,
+                    backgroundColor: ['#00f0ff', '#f43f5e', '#fbbf24', '#8b5cf6'],
+                    borderWidth: 0,
+                    hoverOffset: 15,
+                    borderRadius: 8,
+                    spacing: 4
+                }]
             },
-            scales: {
-                x: { ticks: { color: '#cbd5e1' }, grid: { display: false } },
-                y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.2)' }, beginAtZero: true }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '80%'
             }
-        }
+        });
     });
-
-    // Initial load from DB (API)
-    refreshDashboardData();
-
-    // Auto-refresh every 60s
-    setInterval(refreshDashboardData, 60000);
-});
 </script>
 {% endblock %}

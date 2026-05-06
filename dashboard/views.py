@@ -897,13 +897,16 @@ def password_reset_request(request):
         if not email:
             return JsonResponse({'status': 'error', 'message': 'Email requis'}, status=400)
         
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return JsonResponse({'status': 'error', 'message': 'Aucun compte associé à cet email'}, status=404)
+            
         try:
-            user = User.objects.get(email=email)
             # Générer un OTP à 6 chiffres
             import random
             otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
             
-            # Sauvegarder l'OTP (on réutilise ou crée PasswordResetCode)
+            # Sauvegarder l'OTP
             PasswordResetCode.objects.update_or_create(
                 user=user,
                 defaults={'code': otp, 'created_at': timezone.now()}
@@ -916,9 +919,6 @@ def password_reset_request(request):
             send_mail(subject, message, from_email, [email])
             
             return JsonResponse({'status': 'success'})
-        except User.DoesNotExist:
-            # Pour la sécurité, on ne dit pas si l'email existe ou non, mais ici on peut être plus explicite pour le dev
-            return JsonResponse({'status': 'error', 'message': 'Aucun compte associé à cet email'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return render(request, 'dashboard/password_reset_new.html')
@@ -929,8 +929,11 @@ def password_reset_verify(request):
         email = request.POST.get('email')
         otp = request.POST.get('otp')
         
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
+
         try:
-            user = User.objects.get(email=email)
             reset_code = PasswordResetCode.objects.get(user=user, code=otp)
             
             # Vérifier l'expiration (10 minutes)
@@ -938,7 +941,7 @@ def password_reset_verify(request):
                 return JsonResponse({'status': 'error', 'message': 'Code expiré'}, status=400)
             
             return JsonResponse({'status': 'success'})
-        except (User.objects.DoesNotExist, PasswordResetCode.DoesNotExist):
+        except (User.DoesNotExist, PasswordResetCode.DoesNotExist):
             return JsonResponse({'status': 'error', 'message': 'Code invalide'}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
 
@@ -948,8 +951,11 @@ def password_reset_new(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
+
         try:
-            user = User.objects.get(email=email)
             user.set_password(password)
             user.save()
             
@@ -957,8 +963,8 @@ def password_reset_new(request):
             PasswordResetCode.objects.filter(user=user).delete()
             
             return JsonResponse({'status': 'success'})
-        except User.objects.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
 
 from django.core.mail import send_mail
